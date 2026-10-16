@@ -14,7 +14,7 @@
 # those belong to the ISO or to the sdr/core-network/device-tools add-ons).
 # =============================================================================
 # Stage 1: build the Go operator CLI (preferred over the bash launcher).
-FROM golang:1.22-bookworm AS cli-builder
+FROM golang:1.27-bookworm AS cli-builder
 WORKDIR /src
 COPY packages/telcosec-cli/ ./
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/telcosec ./cmd/telcosec
