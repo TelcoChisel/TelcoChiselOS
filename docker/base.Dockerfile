@@ -19,7 +19,7 @@ WORKDIR /src
 COPY packages/telcosec-cli/ ./
 RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/telcosec ./cmd/telcosec
 
-FROM ubuntu:24.04
+FROM ubuntu:26.04
 
 ARG VERSION=2026.2
 
