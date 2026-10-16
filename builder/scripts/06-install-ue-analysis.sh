@@ -277,8 +277,15 @@ echo "Compiling and installing lpac eSIM profile manager..."
 cd /opt/telcosec/lpac
 rm -rf build && mkdir build && cd build
 if cmake -DCMAKE_BUILD_TYPE=Release .. && make -j"$(nproc)"; then
-  sudo cp src/lpac /usr/local/bin/lpac
-  sudo chmod 755 /usr/local/bin/lpac
+  # lpac >= v2.x links the binary to build/output/lpac; older trees used
+  # build/src/lpac. Find it instead of hardcoding, so a layout change can't
+  # abort the whole script under `set -e` (FirmWire/MTKClient/pySim follow).
+  LPAC_BIN="$(find . -type f -name lpac -perm -u+x 2>/dev/null | head -1)"
+  if [ -n "$LPAC_BIN" ]; then
+    sudo install -m 755 "$LPAC_BIN" /usr/local/bin/lpac
+  else
+    echo "WARNING: lpac built but binary not found — tool will be unavailable"
+  fi
 else
   echo "WARNING: lpac build failed — tool will be unavailable"
 fi
