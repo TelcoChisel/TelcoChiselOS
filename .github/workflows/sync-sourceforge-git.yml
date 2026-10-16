@@ -10,23 +10,22 @@ concurrency:
   group: sf-git-sync
   cancel-in-progress: false
 
-env:
-  SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
-  SF_USER: ${{ secrets.SF_USER }}
-
 jobs:
   sync:
     runs-on: ubuntu-24.04
     timeout-minutes: 5
+    env:
+      # Boolean only — never inject the private key into the whole job env.
+      HAS_SF_KEY: ${{ secrets.SF_SSH_KEY != '' }}
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           fetch-depth: 0
           token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Setup SSH for SourceForge Git
-        if: env.SF_SSH_KEY != ''
+        if: env.HAS_SF_KEY == 'true'
         env:
           SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
         run: |
@@ -36,9 +35,8 @@ jobs:
           ssh-keyscan -H git.code.sf.net >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Push to SourceForge Git Mirror
-        if: env.SF_SSH_KEY != ''
+        if: env.HAS_SF_KEY == 'true'
         env:
-          SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
           SF_USER: ${{ secrets.SF_USER }}
         run: |
           git remote add sf "ssh://${SF_USER}@git.code.sf.net/p/telcochisel/code" || git remote set-url sf "ssh://${SF_USER}@git.code.sf.net/p/telcochisel/code"
@@ -55,6 +53,6 @@ jobs:
           echo "✓ Successfully synced main branch and tags to SourceForge Git"
 
       - name: Warn if SF_SSH_KEY is missing
-        if: env.SF_SSH_KEY == ''
+        if: env.HAS_SF_KEY != 'true'
         run: |
           echo "::warning::SF_SSH_KEY secret is absent — SourceForge Git sync skipped"

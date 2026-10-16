@@ -23,8 +23,9 @@ Understanding how TelcoChisel is built helps in making effective contributions:
 TelcoChiselOS/
 ├── build-iso.sh               # Root live-build orchestrator (debootstrap, chroot, squashfs, xorriso)
 ├── build-wsl.sh               # Host-side wrapper for building under WSL 2 Ubuntu
+├── VERSION                    # Canonical release id (YYYY.R, e.g. 2026.2)
 ├── builder/
-│   ├── scripts/               # Sequential chroot provisioning phases:
+│   ├── scripts/               # Sequential chroot provisioning phases (note: 06 runs before 05):
 │   │   ├── 00-install-all-packages.sh   # Base APT package provisioning & flavor branching
 │   │   ├── 01-install-base.sh           # Users, locales, display manager, kernel modules
 │   │   ├── 02-install-sdr.sh            # UHD, HackRF, BladeRF, LimeSDR, Conda GNU Radio
@@ -33,21 +34,42 @@ TelcoChiselOS/
 │   │   ├── 05-desktop-customization.sh  # XFCE themes, wallpapers, panel layouts, i3
 │   │   ├── 06-install-ue-analysis.sh    # Mobile baseband tools, ADB, scrcpy
 │   │   ├── 07-install-installer.sh      # Calamares GUI installer configuration
-│   │   ├── 08-system-optimization.sh   # Real-time kernel tuning, udev rules, limits
+│   │   ├── 08-system-optimization.sh    # Real-time kernel tuning, udev rules, limits
 │   │   ├── 09-install-5ghoul.sh         # 5Ghoul 5G NR fuzzer framework
 │   │   ├── 10-install-telecom-advanced.sh # Advanced telecom tools (SigPloit, SCAT, etc.)
 │   │   ├── 11-install-device-tools.sh   # Firmware flashing (EDL, MTKClient, Heimdall)
-│   │   └── 12-install-dashboard.sh      # Offline documentation and system helpers
+│   │   └── 12-install-dashboard.sh      # ChiselControl dashboard (nginx/PHP) + DB init
 │   ├── menu/applications/     # XDG .desktop launcher shortcuts for the XFCE menu
 │   └── docs/                  # Offline HTML documentation (/usr/share/doc/telcosec/)
 ├── data/
-│   └── tools.json             # Canonical single source of truth for the 88-tool catalog
-├── debian/
-│   └── control                # Debian metapackages definition (telcochisel-*)
-├── docker/                    # Podman & Docker container suites
+│   └── tools.json             # Canonical single source of truth for the 100-tool catalog
+├── packages/
+│   ├── metapackages/          # Debian metapackages (telcochisel-*) → meta.telcosec.net
+│   ├── telcosec-cli/          # Go operator CLI → `/usr/local/libexec/telcosec`
+│   │                          # PATH: bash wrapper at `/usr/local/bin/telcosec`
+│   │                          # Explicit bash: `telcosec.bash` or TELCOSEC_FORCE_BASH=1
+│   └── homebrew-tap/          # Homebrew Formula distribution
+├── docker/                    # Podman & Docker container suites + K8s/Podman pods
 ├── docs/                      # Online documentation portal (Nuxt 3)
 └── scripts/                   # Validation, catalog sync, and maintenance utilities
 ```
+
+---
+
+## Upstream clone pins
+
+When adding a `git clone` for a new tool, prefer a **release tag** (or commit SHA) over a floating default branch:
+
+```bash
+# Preferred — pin via build-tool.sh helper (3rd arg = tag/branch)
+clone_bg https://github.com/example/tool "${TELCOSEC_OPT}/tool" v1.2.3
+
+# Or inline with fallback
+git clone --depth 1 --branch v1.2.3 https://github.com/example/tool /opt/telcosec/tool \
+  || git clone --depth 1 https://github.com/example/tool /opt/telcosec/tool
+```
+
+See `RELEASES.md` §5 for the current pin policy and the `TELCOSEC_ALLOW_TOOL_FAILURES` build gate.
 
 ---
 
@@ -172,7 +194,7 @@ sudo ./build-iso.sh --flavor=full
 ### Boot Testing in QEMU
 Test your newly built ISO in a virtual machine:
 ```bash
-./scripts/test-iso-boot.sh TelcoChisel-3.0.0-lite-amd64.iso
+./scripts/test-iso-boot.sh TelcoChisel-2026.2-lite-amd64.iso
 ```
 
 ---

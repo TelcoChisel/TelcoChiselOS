@@ -9,8 +9,16 @@
 #   - Signaling and protocol assessment runners (SCTP, SIP, Diameter, SS7)
 #   - Offline SDR FPGA bitstream management
 #   - TelcoSec Academy lab testbed bridge
+#
+# When the Go binary is installed at /usr/local/libexec/telcosec (preferred),
+# this script execs it. Force bash: TELCOSEC_FORCE_BASH=1 or telcosec.bash.
 # =============================================================================
 set -euo pipefail
+
+# Prefer Go CLI when present (ISO/Docker install Go → libexec, bash → PATH).
+if [ "${TELCOSEC_FORCE_BASH:-0}" != "1" ] && [ -x /usr/local/libexec/telcosec ]; then
+  exec /usr/local/libexec/telcosec "$@"
+fi
 
 VERSION="2026.2"
 

@@ -7,6 +7,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ---
 
+## [Unreleased]
+
+### Added
+- Dedicated 5Ghoul overlay at `packages/5ghoul-5g-nr-attacks` (pinned upstream commit, BladeRF/LimeSDR/USRP radio apply). Image: `telcochisel-5ghoul` (default radio BladeRF).
+
+### Changed
+- GitHub org for the distribution and packaging repos is [TelcoChisel](https://github.com/TelcoChisel): `TelcoChiselOS`, `5ghoul-5g-nr-attacks`, `telcosec-cli`, `homebrew-tap`, `telcochisel-metapackages`. Docs, compose, and GHCR paths use `ghcr.io/telcochisel/…` and `brew tap telcochisel/tap`.
+- CI: single validate job (path-gated catalogs; Go CLI CI only in `telcosec-cli`). Docker: GHCR-first on tags, Hub/DO opt-in, GHA cache `mode=min`, `telcochisel` registry defaults. Release: weekly cron builds lite ISO; apt/ccache keys rotate weekly.
+- Website (`telcochisel.com`) lives in [TelcoChisel/website](https://github.com/TelcoChisel/website); OS `deploy-docs` retired in favor of that repo + `notify-website.yml` on catalog changes.
+
+### Security
+- Dashboard: deny nginx serving of dotfiles (`.env`); generate per-install DB password at first boot; path-guarded mkdir/chown helpers (no sudoers `*` wildcards).
+- Compose: remove default `docker.sock` mount; opt-in via `docker/compose.docker-sock.yaml`.
+- Containers: replace `NOPASSWD:ALL` with scoped apt/install-helper sudoers.
+- VMs: cloud-init uses password-required sudo (not `NOPASSWD:ALL`).
+- K8s device-audit pod: non-privileged default; privileged variant is opt-in.
+- CLI `pkg repo enable`: fingerprint-verified key install (no `curl | bash` from floating `main`).
+- Docker base image: fingerprint-verify TelcoChisel APT key (parity with ISO).
+
+### Changed
+- ISO builds fail when `record_tool` reports FAIL (override: `TELCOSEC_ALLOW_TOOL_FAILURES=1`).
+- Operator CLI layout: Go binary at `/usr/local/libexec/telcosec`; bash wrapper on PATH execs it.
+- Critical upstream clones pinned to release tags where available (UERANSIM, gtp5g, srsRAN, SIPp, OAI, etc.).
+- GitHub Actions in root and nested package workflows pinned to commit SHAs.
+- Docs deploy uses `npm ci`; Dependabot + ShellCheck job added; SF secrets scoped to publish steps.
+- Canonical messaging aligned to `2026.2` / 100-tool catalog (online sidebar + offline docs).
+- Miniconda / rustup-init version-pinned; Docker clone pins aligned with ISO; container builds set `TELCOSEC_ALLOW_TOOL_FAILURES=1`.
+- `docker_open5gs` pinned to commit `1f3bcf73f926…` (no upstream tags).
+
+---
+
 ## [3.1.0] - 2026-09-26 (Noble Cellular)
 
 ### Added

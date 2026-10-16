@@ -34,10 +34,10 @@ concurrency:
   cancel-in-progress: false
 
 env:
-  SF_USER: ${{ secrets.SF_USER }}
   SF_PROJECT: telcochisel
   SF_HOST: frs.sourceforge.net
-  SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+  # Boolean only — inject SF_SSH_KEY / SF_USER only in steps that publish.
+  HAS_SF_KEY: ${{ secrets.SF_SSH_KEY != '' }}
 
 jobs:
   build-vm:
@@ -49,7 +49,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Maximize Runner Disk Space
         run: |
@@ -164,14 +164,16 @@ jobs:
           fi
 
       - name: Upload Build Artifacts to GitHub Actions
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: telcochisel-vm-${{ github.event.inputs.target }}
           path: dist/vm/
           retention-days: 7
 
       - name: Setup SSH for SourceForge
-        if: github.event.inputs.publish_sf == 'true' && env.SF_SSH_KEY != ''
+        if: github.event.inputs.publish_sf == 'true' && env.HAS_SF_KEY == 'true'
+        env:
+          SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
         run: |
           mkdir -p ~/.ssh
           printf '%s\n' "$SF_SSH_KEY" > ~/.ssh/sf_deploy
@@ -179,7 +181,9 @@ jobs:
           ssh-keyscan -H "$SF_HOST" >> ~/.ssh/known_hosts 2>/dev/null
 
       - name: Deploy Appliances to SourceForge
-        if: github.event.inputs.publish_sf == 'true' && env.SF_SSH_KEY != ''
+        if: github.event.inputs.publish_sf == 'true' && env.HAS_SF_KEY == 'true'
+        env:
+          SF_USER: ${{ secrets.SF_USER }}
         run: |
           set -euo pipefail
           SF_TARGET="$SF_USER,$SF_PROJECT@$SF_HOST"

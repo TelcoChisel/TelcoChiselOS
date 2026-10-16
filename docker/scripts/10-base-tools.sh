@@ -361,7 +361,8 @@ fi
 record_tool "SIMurai" "/usr/local/bin/simurai" "sim"
 
 # ─── 16. UERANSIM (from 10-install-telecom-advanced.sh) ────────────────────
-git_clone_retry --depth 1 https://github.com/aligungr/UERANSIM "${TELCOSEC_OPT}/ueransim"
+git_clone_retry --depth 1 --branch v3.3.0 https://github.com/aligungr/UERANSIM "${TELCOSEC_OPT}/ueransim" \
+  || git_clone_retry --depth 1 https://github.com/aligungr/UERANSIM "${TELCOSEC_OPT}/ueransim"
 cd "${TELCOSEC_OPT}/ueransim"
 cmake -DCMAKE_BUILD_TYPE=Release . 2>&1 | tail -3
 make -j"$(nproc)" 2>&1 | tail -5
@@ -400,7 +401,8 @@ fi
 record_tool "SIMTester" "/usr/local/bin/simtester" "sim"
 
 # ─── 20. LTESniffer (from 10-install-telecom-advanced.sh) ──────────────────
-git_clone_retry --depth 1 https://github.com/SysSec-KAIST/LTESniffer "${TELCOSEC_OPT}/ltesniffer"
+git_clone_retry --depth 1 --branch LTESniffer-v2.1.0 https://github.com/SysSec-KAIST/LTESniffer "${TELCOSEC_OPT}/ltesniffer" \
+  || git_clone_retry --depth 1 https://github.com/SysSec-KAIST/LTESniffer "${TELCOSEC_OPT}/ltesniffer"
 cd "${TELCOSEC_OPT}/ltesniffer"
 mkdir -p build && cd build
 export CFLAGS="-Wno-error -fcommon -fpermissive"
@@ -418,7 +420,8 @@ rm -rf "${TELCOSEC_OPT}/ltesniffer/build"
 record_tool "LTESniffer" "/usr/local/bin/ltesniffer" "4g"
 
 # ─── 21. RouterSploit (from 10-install-telecom-advanced.sh) ────────────────
-git_clone_retry --depth 1 https://github.com/threat9/routersploit "${TELCOSEC_OPT}/routersploit"
+git_clone_retry --depth 1 --branch v3.4.7 https://github.com/threat9/routersploit "${TELCOSEC_OPT}/routersploit" \
+  || git_clone_retry --depth 1 https://github.com/threat9/routersploit "${TELCOSEC_OPT}/routersploit"
 cd "${TELCOSEC_OPT}/routersploit"
 pip_retry install -r requirements.txt --break-system-packages
 cat << 'EOF' > /usr/local/bin/routersploit
@@ -496,7 +499,8 @@ fi
 record_tool "RDNSx" "/usr/local/bin/rdnsx" "adsl"
 
 # ─── 22. SIPp (from 00-install-all-packages.sh — not in Ubuntu 24.04 apt) ──
-git_clone_retry --depth 1 https://github.com/SIPp/sipp "${TELCOSEC_OPT}/sipp"
+git_clone_retry --depth 1 --branch v3.7.9 https://github.com/SIPp/sipp "${TELCOSEC_OPT}/sipp" \
+  || git_clone_retry --depth 1 https://github.com/SIPp/sipp "${TELCOSEC_OPT}/sipp"
 cmake -S "${TELCOSEC_OPT}/sipp" -B "${TELCOSEC_OPT}/sipp/build" \
   -DCMAKE_BUILD_TYPE=Release \
   -DUSE_SSL=1 \
@@ -610,10 +614,20 @@ chmod +x /usr/local/bin/telcosec-ran-status
 record_tool "telcosec-ran-status" "/usr/local/bin/telcosec-ran-status" "telecom"
 
 
-# ─── 23. sudo access for the telcosec user (parity with the ISO's telcosec
-# account — some tools shell out to apt-get for on-demand deps at runtime) ──
-echo "telcosec ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/telcosec
+# ─── 23. Scoped sudo for the telcosec user ──────────────────────────────────
+# Intentionally NOT NOPASSWD:ALL — that granted container-to-host root when
+# combined with docker.sock / privileged. Package-management and a few
+# first-run helpers are enough for on-demand deps; escalate further only
+# when you deliberately re-run the image as root or add your own sudoers.
+cat > /etc/sudoers.d/telcosec << 'SUDOERS'
+# TelcoChisel container — scoped passwordless sudo (not ALL)
+telcosec ALL=(root) NOPASSWD: /usr/bin/apt-get, /usr/bin/apt, /usr/bin/dpkg
+telcosec ALL=(root) NOPASSWD: /usr/local/bin/srsran-install, /usr/local/bin/open5gs-install
+telcosec ALL=(root) NOPASSWD: /usr/local/bin/oai-install, /usr/local/bin/5ghoul-install
+telcosec ALL=(root) NOPASSWD: /usr/local/bin/gtp5g-load
+SUDOERS
 chmod 440 /etc/sudoers.d/telcosec
+visudo -c -f /etc/sudoers.d/telcosec || echo "WARNING: telcosec sudoers failed visudo check"
 
 # ─── 23b. TelcoSec & TelcoSec Academy interactive login banner ───────────────
 cat << 'BANNER_EOF' > /etc/profile.d/00-telcosec-banner.sh

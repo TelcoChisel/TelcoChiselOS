@@ -9,15 +9,16 @@ metadata:
     app.kubernetes.io/component: device-tools
     net.telcosec.tier: device-tools
   annotations:
-    description: "TelcoChisel modem, baseband, and mobile device forensic analysis pod"
+    description: "TelcoChisel modem, baseband, and mobile device forensic analysis pod (non-privileged default)"
     net.telcosec.academy.lab: "https://app.telcosec.net/labs/baseband-firmware-re"
+    net.telcosec.security: "Default is non-privileged. For full USB/tty enumeration apply k8s-device-audit-pod.privileged.yaml instead — privileged+hostPath is node-compromise equivalent on shared clusters."
 spec:
   shareProcessNamespace: true
   restartPolicy: Always
   containers:
     # ─── 1. Device Flashing & Hardware Interface (Heimdall, ADB, MTK, EDL) ───
     - name: device-flasher
-      image: ghcr.io/telcosec-tools/telcochisel-device-tools:latest
+      image: ghcr.io/telcochisel/telcochisel-device-tools:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash
@@ -26,11 +27,16 @@ spec:
           echo "================================================================"
           echo "  TelcoChisel Mobile Device & Baseband Flashing Interface"
           echo "  Tools: Heimdall, ADB/Fastboot, MTKClient, Qualcomm EDL, AT"
+          echo "  Mode: non-privileged (USB hostPath only)"
+          echo "  Need full ttyUSB? kubectl apply -f k8s-device-audit-pod.privileged.yaml"
           echo "  Training & Labs: https://app.telcosec.net"
           echo "================================================================"
           sleep infinity
       securityContext:
-        privileged: true   # Needed for dynamic USB serial / ttyUSB enumeration
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
+          add: ["NET_RAW"]
       resources:
         requests:
           cpu: "500m"
@@ -53,7 +59,7 @@ spec:
 
     # ─── 2. Baseband Fuzzing & Protocol Decoder (SCAT, QCSuper, FirmWire) ───
     - name: baseband-decoder
-      image: ghcr.io/telcosec-tools/telcochisel-base:latest
+      image: ghcr.io/telcochisel/telcochisel-base:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash
@@ -64,6 +70,10 @@ spec:
           echo "  Shared workspace: /firmware-analysis"
           echo "================================================================"
           sleep infinity
+      securityContext:
+        allowPrivilegeEscalation: false
+        capabilities:
+          drop: ["ALL"]
       resources:
         requests:
           cpu: "500m"

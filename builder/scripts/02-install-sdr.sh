@@ -16,12 +16,27 @@ if [ ! -f /tmp/.packages-installed ]; then
     build-essential cmake git wget libusb-1.0-0-dev pkg-config
 fi
 
-# 1. Install Miniconda
+# 1. Install Miniconda (version-pinned — never use Miniconda3-latest)
+MINICONDA_VER="py312_26.7.1-1"
+MINICONDA_INSTALLER="Miniconda3-${MINICONDA_VER}-Linux-x86_64.sh"
+MINICONDA_URL="https://repo.anaconda.com/miniconda/${MINICONDA_INSTALLER}"
 if [ ! -d /opt/telcosec/miniconda ]; then
-  echo "Installing Miniconda..."
-  wget https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
+  echo "Installing Miniconda ${MINICONDA_VER}..."
+  wget -O /tmp/miniconda.sh "$MINICONDA_URL"
+  # Verify when Anaconda publishes a companion .sha256 (hex or "hex  filename").
+  if wget -q -O /tmp/miniconda.sh.sha256 "${MINICONDA_URL}.sha256" 2>/dev/null; then
+    EXPECTED=$(awk '{print $1}' /tmp/miniconda.sh.sha256)
+    ACTUAL=$(sha256sum /tmp/miniconda.sh | awk '{print $1}')
+    if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then
+      echo "ERROR: Miniconda SHA256 mismatch (expected=$EXPECTED actual=$ACTUAL)" >&2
+      exit 1
+    fi
+    echo "  Miniconda SHA256 verified: $ACTUAL"
+  else
+    echo "  WARNING: no .sha256 sidecar for ${MINICONDA_INSTALLER} — proceeding without verify"
+  fi
   bash /tmp/miniconda.sh -b -p /opt/telcosec/miniconda
-  rm /tmp/miniconda.sh
+  rm -f /tmp/miniconda.sh /tmp/miniconda.sh.sha256
 else
   echo "Miniconda already installed, skipping installer."
 fi
@@ -59,10 +74,10 @@ export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
 # 3. Clone SDR source repos in parallel (fail loudly if any clone fails)
 echo "Cloning SDR source repositories..."
 mkdir -p /opt/telcosec/src
-clone_bg https://github.com/greatscottgadgets/hackrf.git        /opt/telcosec/src/hackrf
-clone_bg https://github.com/EttusResearch/uhd.git               /opt/telcosec/src/uhd
+clone_bg https://github.com/greatscottgadgets/hackrf.git        /opt/telcosec/src/hackrf      v2026.01.3
+clone_bg https://github.com/EttusResearch/uhd.git               /opt/telcosec/src/uhd         v4.11.0.0
 clone_bg https://github.com/steve-m/kalibrate-rtl.git          /opt/telcosec/src/kalibrate-rtl
-clone_bg https://github.com/myriadrf/LimeSuite.git              /opt/telcosec/src/LimeSuite
+clone_bg https://github.com/myriadrf/LimeSuite.git              /opt/telcosec/src/LimeSuite    v23.11.0
 
 if ! wait_clones "SDR repos"; then
   echo "Aborting: one or more SDR repo clones failed" >&2

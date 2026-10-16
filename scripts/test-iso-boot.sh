@@ -7,7 +7,7 @@
 #
 # Usage:
 #   ./scripts/test-iso-boot.sh [OPTIONS] [ISO_PATH]
-#   ./scripts/test-iso-boot.sh --headless --timeout=60 TelcoChisel-3.0.0-amd64.iso
+#   ./scripts/test-iso-boot.sh --headless --timeout=60 TelcoChisel-2026.2-amd64.iso
 # =============================================================================
 
 set -eo pipefail
@@ -68,7 +68,7 @@ Options:
 
 Examples:
   ./scripts/test-iso-boot.sh TelcoChisel-live.iso
-  ./scripts/test-iso-boot.sh --timeout=60 --memory=2048 TelcoChisel-3.0.0-amd64.iso
+  ./scripts/test-iso-boot.sh --timeout=60 --memory=2048 TelcoChisel-2026.2-amd64.iso
 HELP
       exit 0
       ;;
@@ -82,8 +82,8 @@ HELP
 done
 
 if [ -z "$ISO_PATH" ]; then
-  if [ -f "TelcoChisel-3.0.0-amd64.iso" ]; then
-    ISO_PATH="TelcoChisel-3.0.0-amd64.iso"
+  if [ -f "TelcoChisel-2026.2-amd64.iso" ]; then
+    ISO_PATH="TelcoChisel-2026.2-amd64.iso"
   elif [ -f "TelcoChisel-live.iso" ]; then
     ISO_PATH="TelcoChisel-live.iso"
   else

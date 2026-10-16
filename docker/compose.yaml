@@ -6,6 +6,7 @@
 #   docker compose -f docker/compose.yaml run --rm sdr
 #   docker compose -f docker/compose.yaml run --rm core-network
 #   docker compose -f docker/compose.yaml run --rm device-tools
+#   docker compose -f docker/compose.yaml run --rm 5ghoul
 #
 # Build all four locally (build context is the repo root — run compose from
 # there, or pass -f docker/compose.yaml from anywhere):
@@ -16,7 +17,7 @@
 # =============================================================================
 services:
   base:
-    image: ghcr.io/telcosec-tools/telcochisel-base:latest
+    image: ghcr.io/telcochisel/telcochisel-base:latest
     build:
       context: ..
       dockerfile: docker/base.Dockerfile
@@ -31,7 +32,7 @@ services:
       start_period: 5s
 
   sdr:
-    image: ghcr.io/telcosec-tools/telcochisel-sdr:latest
+    image: ghcr.io/telcochisel/telcochisel-sdr:latest
     build:
       context: ..
       dockerfile: docker/sdr.Dockerfile
@@ -56,7 +57,7 @@ services:
       - /tmp/.X11-unix:/tmp/.X11-unix:ro
 
   core-network:
-    image: ghcr.io/telcosec-tools/telcochisel-core-network:latest
+    image: ghcr.io/telcochisel/telcochisel-core-network:latest
     build:
       context: ..
       dockerfile: docker/core-network.Dockerfile
@@ -77,13 +78,12 @@ services:
     # ogstun interface working end-to-end; see docker/README.md for the
     # bridge-network alternative if host networking isn't acceptable.
     network_mode: host
-    # Only needed if you run `open5gs-install` (upstream's docker-compose
-    # flow runs `docker` FROM INSIDE this container). Comment out if unused.
-    volumes:
-      - /var/run/docker.sock:/var/run/docker.sock
+    # docker.sock is NOT mounted by default (host root equivalent).
+    # Opt in only when running `open5gs-install` nested compose:
+    #   docker compose -f docker/compose.yaml -f docker/compose.docker-sock.yaml up core-network
 
   device-tools:
-    image: ghcr.io/telcosec-tools/telcochisel-device-tools:latest
+    image: ghcr.io/telcochisel/telcochisel-device-tools:latest
     build:
       context: ..
       dockerfile: docker/device-tools.Dockerfile
@@ -102,3 +102,25 @@ services:
     # at run time (dynamic — can't be listed here). Prefer:
     #   docker run --device /dev/ttyUSB0 ... telcochisel-device-tools
     # or --privileged for exploratory use.
+
+  5ghoul:
+    image: ghcr.io/telcochisel/telcochisel-5ghoul:latest
+    build:
+      context: ..
+      dockerfile: docker/5ghoul.Dockerfile
+    init: true
+    stdin_open: true
+    tty: true
+    healthcheck:
+      test: ["CMD", "/usr/local/bin/container-healthcheck.sh"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 5s
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TELCOSEC_5GHOUL_RADIO: BLADERF

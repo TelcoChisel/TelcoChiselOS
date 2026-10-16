@@ -15,7 +15,7 @@ spec:
   restartPolicy: Always
   containers:
     - name: sdr-capture-engine
-      image: ghcr.io/telcosec-tools/telcochisel-sdr:latest
+      image: ghcr.io/telcochisel/telcochisel-sdr:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash

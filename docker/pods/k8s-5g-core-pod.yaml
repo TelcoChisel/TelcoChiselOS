@@ -18,7 +18,7 @@ spec:
   containers:
     # ─── 1. Open5GS / 5G Core Network Simulation Container ──────────────────
     - name: open5gs-core
-      image: ghcr.io/telcosec-tools/telcochisel-core-network:latest
+      image: ghcr.io/telcochisel/telcochisel-core-network:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash
@@ -74,7 +74,7 @@ spec:
 
     # ─── 2. UERANSIM / Traffic Generator Container ───────────────────────────
     - name: ueransim-tester
-      image: ghcr.io/telcosec-tools/telcochisel-base:latest
+      image: ghcr.io/telcochisel/telcochisel-base:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash

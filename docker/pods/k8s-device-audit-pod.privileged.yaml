@@ -1,0 +1,91 @@
+# Opt-in privileged variant of k8s-device-audit-pod.yaml.
+# privileged + hostPath USB ≈ node compromise on shared clusters.
+# Use only on dedicated lab nodes:
+#   kubectl apply -f docker/pods/k8s-device-audit-pod.privileged.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: telcochisel-device-audit-pod
+  namespace: default
+  labels:
+    app.kubernetes.io/name: telcochisel-device-audit
+    app.kubernetes.io/part-of: telcochisel
+    app.kubernetes.io/component: device-tools
+    net.telcosec.tier: device-tools
+    net.telcosec.security: privileged-lab-only
+  annotations:
+    description: "PRIVILEGED lab-only device audit pod — do not schedule on multi-tenant clusters"
+    net.telcosec.academy.lab: "https://app.telcosec.net/labs/baseband-firmware-re"
+spec:
+  shareProcessNamespace: true
+  restartPolicy: Always
+  containers:
+    - name: device-flasher
+      image: ghcr.io/telcochisel/telcochisel-device-tools:latest
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/bash
+        - -c
+        - |
+          echo "================================================================"
+          echo "  TelcoChisel Device Audit (PRIVILEGED — lab nodes only)"
+          echo "================================================================"
+          sleep infinity
+      securityContext:
+        privileged: true
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
+        limits:
+          cpu: "2000m"
+          memory: "4Gi"
+      livenessProbe:
+        exec:
+          command:
+            - /usr/local/bin/container-healthcheck.sh
+        initialDelaySeconds: 10
+        periodSeconds: 30
+        timeoutSeconds: 5
+      volumeMounts:
+        - name: dev-bus-usb
+          mountPath: /dev/bus/usb
+        - name: firmware-workspace
+          mountPath: /firmware-analysis
+
+    - name: baseband-decoder
+      image: ghcr.io/telcochisel/telcochisel-base:latest
+      imagePullPolicy: IfNotPresent
+      command:
+        - /bin/bash
+        - -c
+        - |
+          echo "================================================================"
+          echo "  TelcoChisel Baseband Protocol Decoder"
+          echo "================================================================"
+          sleep infinity
+      resources:
+        requests:
+          cpu: "500m"
+          memory: "1Gi"
+        limits:
+          cpu: "2000m"
+          memory: "4Gi"
+      livenessProbe:
+        exec:
+          command:
+            - /usr/local/bin/container-healthcheck.sh
+        initialDelaySeconds: 10
+        periodSeconds: 30
+        timeoutSeconds: 5
+      volumeMounts:
+        - name: firmware-workspace
+          mountPath: /firmware-analysis
+
+  volumes:
+    - name: dev-bus-usb
+      hostPath:
+        path: /dev/bus/usb
+        type: Directory
+    - name: firmware-workspace
+      emptyDir: {}

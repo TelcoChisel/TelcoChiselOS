@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thank you for proposing a new tool for **TelcoChisel**!
-        Please review our [Contributing Guidelines](https://github.com/TelcoSec-Tools/TelcoChiselOS/blob/main/CONTRIBUTING.md) to ensure the proposed tool meets licensing and architectural requirements.
+        Please review our [Contributing Guidelines](https://github.com/TelcoChisel/TelcoChiselOS/blob/main/CONTRIBUTING.md) to ensure the proposed tool meets licensing and architectural requirements.
 
   - type: input
     id: tool_name

@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version:
-        description: 'Tag or Version to bump in homebrew-tap (e.g. v3.0.1 or 3.0.1)'
+        description: 'Tag or Version to bump in homebrew-tap (e.g. v2026.2 or 2026.2)'
         required: true
         type: string
   release:
@@ -34,7 +34,7 @@ jobs:
         id: archive
         run: |
           TAG_NAME="${{ steps.resolve.outputs.tag_name }}"
-          ARCHIVE_URL="https://github.com/TelcoSec-Tools/telcosec-cli/archive/refs/tags/${TAG_NAME}.tar.gz"
+          ARCHIVE_URL="https://github.com/TelcoChisel/telcosec-cli/archive/refs/tags/${TAG_NAME}.tar.gz"
           echo "[+] Fetching ${ARCHIVE_URL}..."
 
           HTTP_STATUS=$(curl -sL -w "%{http_code}" -o archive.tar.gz "${ARCHIVE_URL}")
@@ -59,17 +59,17 @@ jobs:
           SHA256="${{ steps.archive.outputs.sha256 }}"
 
           if [ -n "${TAP_TOKEN:-}" ]; then
-            echo "[+] Dispatching bump-formula event to TelcoSec-Tools/homebrew-tap..."
+            echo "[+] Dispatching bump-formula event to TelcoChisel/homebrew-tap..."
             curl -X POST \
               -H "Accept: application/vnd.github.v3+json" \
               -H "Authorization: token ${TAP_TOKEN}" \
-              https://api.github.com/repos/TelcoSec-Tools/homebrew-tap/dispatches \
+              https://api.github.com/repos/TelcoChisel/homebrew-tap/dispatches \
               -d "{\"event_type\": \"bump-formula\", \"client_payload\": {\"version\": \"${TAG_NAME}\", \"sha256\": \"${SHA256}\"}}"
             echo "[+] Repository dispatch successfully triggered."
           else
             echo "[!] HOMEBREW_TAP_TOKEN secret not configured. Cross-repo dispatch skipped."
             echo "[i] To bump Formula/telcosec.rb manually or in homebrew-tap UI:"
-            echo "    Repository: TelcoSec-Tools/homebrew-tap"
+            echo "    Repository: TelcoChisel/homebrew-tap"
             echo "    Workflow  : Bump Formula (bump.yml)"
             echo "    Input     : version=${TAG_NAME}"
             echo "    URL       : ${{ steps.archive.outputs.url }}"

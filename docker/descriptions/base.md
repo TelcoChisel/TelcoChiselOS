@@ -67,5 +67,5 @@ TelcoChisel and TelcoSec tools are designed strictly for authorized telecommunic
 - **TelcoSec Academy (Live Labs):** [app.telcosec.net](https://app.telcosec.net)
 - **Official Website:** [telcosec.net](https://telcosec.net)
 - **Documentation & Research:** [telcosec.net/docs](https://telcosec.net)
-- **GitHub Repository:** [TelcoSec-Tools/TelcoChiselOS](https://github.com/TelcoSec-Tools/TelcoChiselOS)
+- **GitHub Repository:** [TelcoChisel/TelcoChiselOS](https://github.com/TelcoChisel/TelcoChiselOS)
 - **Official Metapackages:** [meta.telcosec.net](https://meta.telcosec.net)

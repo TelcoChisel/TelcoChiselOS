@@ -23,6 +23,7 @@ if [ "${1:-}" = "--build" ]; then
   docker build -f "$REPO_ROOT/docker/device-tools.Dockerfile" -t telcochisel-device-tools "$REPO_ROOT" || exit 1
   docker build -f "$REPO_ROOT/docker/sdr.Dockerfile" -t telcochisel-sdr "$REPO_ROOT" || exit 1
   docker build -f "$REPO_ROOT/docker/core-network.Dockerfile" -t telcochisel-core-network "$REPO_ROOT" || exit 1
+  docker build -f "$REPO_ROOT/docker/5ghoul.Dockerfile" -t telcochisel-5ghoul "$REPO_ROOT" || exit 1
 fi
 
 check() {
@@ -42,6 +43,7 @@ check() {
 echo "=== telcochisel-base ==="
 check telcochisel-base tini         "/usr/bin/tini --version"
 check telcochisel-base healthcheck  "/usr/local/bin/container-healthcheck.sh"
+check telcochisel-base telcosec-go  "test -x /usr/local/libexec/telcosec && telcosec version"
 check telcochisel-base nmap         "nmap --version"
 check telcochisel-base tshark       "tshark --version"
 check telcochisel-base scapy        "python3 -c 'import scapy; print(scapy.VERSION)'"
@@ -77,6 +79,10 @@ check telcochisel-sdr hackrf      "hackrf_info --version || true"
 echo "=== telcochisel-core-network ==="
 check telcochisel-core-network healthcheck "/usr/local/bin/container-healthcheck.sh"
 check telcochisel-core-network helpers     "command -v srsran-install && command -v open5gs-install && command -v gtp5g-load && command -v 5ghoul-install"
+
+echo "=== telcochisel-5ghoul ==="
+check telcochisel-5ghoul healthcheck "/usr/local/bin/container-healthcheck.sh"
+check telcochisel-5ghoul overlay     "test -x /usr/local/bin/5ghoul-install && test -f /opt/telcosec/5ghoul-overlay/UPSTREAM && grep -q 452c8ced /opt/telcosec/5ghoul-overlay/UPSTREAM"
 
 echo "=== Telecom POD Manifest Validation ==="
 if command -v python3 &>/dev/null; then

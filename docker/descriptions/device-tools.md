@@ -63,4 +63,4 @@ Deepen your knowledge of baseband reverse engineering, modem firmware extraction
 
 - **TelcoSec Academy (Live Labs):** [app.telcosec.net](https://app.telcosec.net)
 - **Official Website:** [telcosec.net](https://telcosec.net)
-- **GitHub Repository:** [TelcoSec-Tools/TelcoChiselOS](https://github.com/TelcoSec-Tools/TelcoChiselOS)
+- **GitHub Repository:** [TelcoChisel/TelcoChiselOS](https://github.com/TelcoChisel/TelcoChiselOS)

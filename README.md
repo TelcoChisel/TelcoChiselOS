@@ -7,12 +7,12 @@
   # TelcoChisel OS
   ### Advanced Telecom Security Distribution for Cellular Auditing, SDR Engineering & Baseband Research
 
-  [![Build Status](https://github.com/TelcoSec-Tools/TelcoChiselOS/actions/workflows/release.yml/badge.svg)](https://github.com/TelcoSec-Tools/TelcoChiselOS/actions/workflows/release.yml)
-  [![CI Validation](https://github.com/TelcoSec-Tools/TelcoChiselOS/actions/workflows/ci.yml/badge.svg)](https://github.com/TelcoSec-Tools/TelcoChiselOS/actions/workflows/ci.yml)
+  [![Build Status](https://github.com/TelcoChisel/TelcoChiselOS/actions/workflows/release.yml/badge.svg)](https://github.com/TelcoChisel/TelcoChiselOS/actions/workflows/release.yml)
+  [![CI Validation](https://github.com/TelcoChisel/TelcoChiselOS/actions/workflows/ci.yml/badge.svg)](https://github.com/TelcoChisel/TelcoChiselOS/actions/workflows/ci.yml)
   [![Base OS](https://img.shields.io/badge/Base_OS-Ubuntu_24.04_LTS-E95420?logo=ubuntu&logoColor=white)](https://ubuntu.com)
   [![Kernel](https://img.shields.io/badge/Kernel-Low--Latency_1000Hz-00ffd5?logo=linux&logoColor=black)](https://telcochisel.com)
   [![Tools](https://img.shields.io/badge/Tools-100_Pre--installed-e8921e?logo=gnuradio&logoColor=black)](https://telcochisel.com/#tools)
-  [![GHCR Containers](https://img.shields.io/badge/GHCR-4_Images_Published-0099ff?logo=docker&logoColor=white)](https://github.com/orgs/TelcoSec-Tools/packages)
+  [![GHCR Containers](https://img.shields.io/badge/GHCR-Images_Published-0099ff?logo=docker&logoColor=white)](https://github.com/orgs/TelcoChisel/packages)
   [![Downloads](https://img.shields.io/sourceforge/dt/telcochisel.svg?logo=sourceforge&logoColor=white&label=Downloads&color=00ffd5)](https://sourceforge.net/projects/telcochisel/files/latest/download)
   [![License](https://img.shields.io/badge/License-Apache_2.0-00ffd5.svg)](LICENSE)
   [![Docs](https://img.shields.io/badge/Docs-telcochisel.com-e8921e?logo=cloudflare&logoColor=white)](https://telcochisel.com)
@@ -20,7 +20,7 @@
 
   <br/><br/>
 
-  [**Official Documentation**](https://telcochisel.com) • [**Download Live ISO**](https://sourceforge.net/projects/telcochisel/files/latest/download) • [**VM Appliances**](docs/VM_APPLIANCE_GUIDE.md) • [**Container Registry**](https://github.com/orgs/TelcoSec-Tools/packages) • [**TelcoSec Academy**](https://app.telcosec.net) • [**Discord**](https://discord.gg/RykzXTQFXF)
+  [**Official Documentation**](https://telcochisel.com) • [**Download Live ISO**](https://sourceforge.net/projects/telcochisel/files/latest/download) • [**VM Appliances**](docs/VM_APPLIANCE_GUIDE.md) • [**Website Source**](https://github.com/TelcoChisel/website) • [**Container Registry**](https://github.com/orgs/TelcoChisel/packages) • [**TelcoSec Academy**](https://app.telcosec.net) • [**Discord**](https://discord.gg/RykzXTQFXF)
   <br/>
   [**Release Architecture**](RELEASES.md) • [**Changelog**](CHANGELOG.md) • [**DistroWatch Spec**](DISTROWATCH.md) • [**Contributing**](CONTRIBUTING.md) • [**Security Policy**](SECURITY.md)
 
@@ -214,10 +214,10 @@ Pre-built multi-stage container images published to the GitHub Container Registr
 
 | Container Image | Scope & Included Tools |
 | :--- | :--- |
-| `ghcr.io/telcosec-tools/telcochisel-base:latest` | Base runtime, `telcosec` CLI, Scapy, network utilities |
-| `ghcr.io/telcosec-tools/telcochisel-sdr:latest` | GNU Radio 3.10, UHD, SoapySDR, RTL-SDR, HackRF, BladeRF |
-| `ghcr.io/telcosec-tools/telcochisel-core-network:latest` | Open5GS 5G SA core, UERANSIM gNB/UE, SigPloit, Diafuzzer |
-| `ghcr.io/telcosec-tools/telcochisel-device-tools:latest` | Android ADB/Fastboot, QCSuper, SCAT, pySim, lpac eSIM |
+| `ghcr.io/telcochisel/telcochisel-base:latest` | Base runtime, `telcosec` CLI, Scapy, network utilities |
+| `ghcr.io/telcochisel/telcochisel-sdr:latest` | GNU Radio 3.10, UHD, SoapySDR, RTL-SDR, HackRF, BladeRF |
+| `ghcr.io/telcochisel/telcochisel-core-network:latest` | Open5GS 5G SA core, UERANSIM gNB/UE, SigPloit, Diafuzzer |
+| `ghcr.io/telcochisel/telcochisel-device-tools:latest` | Android ADB/Fastboot, QCSuper, SCAT, pySim, lpac eSIM |
 
 ### 4. Interactive Deployment Manager (`deploy_menu.sh`)
 TelcoChisel provides a unified launcher for running containers, launching telecom pods, or triggering builds:
@@ -262,7 +262,7 @@ sudo dd if=TelcoChisel-2026.2-amd64.iso of=/dev/sdX bs=4M status=progress conv=f
 
 ```bash
 # Run the 5G Core Network container interactively
-docker run --rm -it --net=host ghcr.io/telcosec-tools/telcochisel-core-network:latest
+docker run --rm -it --net=host ghcr.io/telcochisel/telcochisel-core-network:latest
 
 # Or launch a rootless multi-container Telecom Pod via Podman
 podman play kube docker/pods/podman-telecom-pod.yaml

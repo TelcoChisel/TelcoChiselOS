@@ -25,7 +25,7 @@ The canonical release version is tracked in the root [VERSION](file:///m:/TelcoC
 | Channel | Cadence | Artifact Target | Target Audience |
 | :--- | :--- | :--- | :--- |
 | **Stable (`vYYYY.R`)** | Quarterly Milestones | GitHub Releases + SourceForge (`/TelcoChisel/v2026.1/`) | Production field researchers, lab auditors, and enterprise telecom security teams. |
-| **Nightly Rolling** | Automated / Triggered | GitHub Releases ([`rolling`](https://github.com/TelcoSec-Tools/TelcoChiselOS/releases/tag/rolling)) + SourceForge (`/telcochisel/rolling/`) | Core contributors, CI regression testing, and bleeding-edge protocol validation. |
+| **Nightly Rolling** | Automated / Triggered | GitHub Releases ([`rolling`](https://github.com/TelcoChisel/TelcoChiselOS/releases/tag/rolling)) + SourceForge (`/telcochisel/rolling/`) | Core contributors, CI regression testing, and bleeding-edge protocol validation. |
 
 ---
 
@@ -96,3 +96,17 @@ Releases are triggered automatically via `.github/workflows/release.yml`:
    - Pushes release assets and checksums to GitHub Releases.
    - Synchronizes ISO files and README documentation to SourceForge (`frs.sourceforge.net`).
    - Generates and uploads the static offline docs portal.
+
+### Tool-build gate
+
+ISO provisioning records each instrumented tool via `record_tool()`. After phase 12, `record_tool_summary` **fails the build** if any artifact is missing.
+
+Override for intentional best-effort / nightly experiments:
+
+```bash
+TELCOSEC_ALLOW_TOOL_FAILURES=1 sudo ./build-iso.sh --flavor=full
+```
+
+### Upstream clone pins
+
+Critical third-party sources are cloned at tagged releases when available (UERANSIM, gtp5g, srsRAN, SIPp, RouterSploit, OAI, OpenBTS, LTESniffer, scat, osmocom-bb, HackRF, UHD, LimeSuite, mtkclient, pysim, lpac). `herlesupreeth/docker_open5gs` is pinned to commit `1f3bcf73f926…` (no upstream tags). Helpers fall back to the default branch if a pin disappears. Repos without tags (e.g. 5Ghoul, asleap, yate) remain floating by necessity — prefer adding a pin when upstream cuts a release.

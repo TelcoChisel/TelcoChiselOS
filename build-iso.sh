@@ -98,7 +98,7 @@ Usage: sudo ./build-iso.sh [OPTIONS]
 Examples:
   sudo ./build-iso.sh                    # fresh full Field Edition build (~5.0 GB)
   sudo ./build-iso.sh --lite             # build Modular Lite Edition ISO (~1.8 GB)
-  sudo ./build-iso.sh --version=3.0.0    # build versioned TelcoChisel-3.0.0-amd64.iso
+  sudo ./build-iso.sh --version=2026.2   # build versioned TelcoChisel-2026.2-amd64.iso
   sudo ./build-iso.sh --resume           # re-run everything on existing chroot
   sudo ./build-iso.sh --resume-from=04   # skip 00-03, resume from 04 onward
   sudo ./build-iso.sh --pack-only        # just repack squashfs → ISO
@@ -270,6 +270,11 @@ elif $RESUME; then
   if [ -d packages/telcosec-cli ]; then
     rm -rf "$ROOTFS/tmp/telcosec-cli" && cp -r packages/telcosec-cli "$ROOTFS/tmp/telcosec-cli"
   fi
+  if [ -d packages/5ghoul-5g-nr-attacks/scripts ]; then
+    rm -rf "$ROOTFS/tmp/5ghoul-overlay"
+    mkdir -p "$ROOTFS/tmp/5ghoul-overlay"
+    cp -a packages/5ghoul-5g-nr-attacks/UPSTREAM packages/5ghoul-5g-nr-attacks/scripts "$ROOTFS/tmp/5ghoul-overlay/"
+  fi
   # Guarantee Unix LF line endings across all copied builder assets inside chroot
   find "$ROOTFS/tmp" -type f -exec sed -i -e 's/\r$//' {} + 2>/dev/null || true
 
@@ -351,6 +356,11 @@ HOSTS
   fi
   if [ -d packages/telcosec-cli ]; then
     cp -r packages/telcosec-cli "$ROOTFS/tmp/telcosec-cli"
+  fi
+  if [ -d packages/5ghoul-5g-nr-attacks/scripts ]; then
+    rm -rf "$ROOTFS/tmp/5ghoul-overlay"
+    mkdir -p "$ROOTFS/tmp/5ghoul-overlay"
+    cp -a packages/5ghoul-5g-nr-attacks/UPSTREAM packages/5ghoul-5g-nr-attacks/scripts "$ROOTFS/tmp/5ghoul-overlay/"
   fi
   # Guarantee Unix LF line endings across all copied builder assets inside chroot
   find "$ROOTFS/tmp" -type f -exec sed -i -e 's/\r$//' {} + 2>/dev/null || true
@@ -441,7 +451,12 @@ if ! $PACK_ONLY; then
     cp "${ROOTFS}/usr/share/telcosec/tool-manifest.txt" /tmp/tool-manifest.txt
     # Override manifest path for summary
     _TELCOSEC_MANIFEST=/tmp/tool-manifest.txt
-    record_tool_summary
+    # Fatal by default when any record_tool() artifact is missing.
+    # TELCOSEC_ALLOW_TOOL_FAILURES=1 continues (best-effort / nightlies).
+    record_tool_summary || {
+      echo "ERROR: tool build summary reported failures — aborting ISO build." >&2
+      exit 1
+    }
   else
     echo "  (no tool manifest found — record_tool may not have run)"
   fi
@@ -675,7 +690,7 @@ VARIANT="${DISTRO_FLAVOR_LABEL}"
 VARIANT_ID="${BUILD_FLAVOR}"
 HOME_URL="https://telcochisel.com"
 SUPPORT_URL="https://community.telcosec.net/"
-BUG_REPORT_URL="https://github.com/TelcoSec-Tools/TelcoChiselOS/issues"
+BUG_REPORT_URL="https://github.com/TelcoChisel/TelcoChiselOS/issues"
 PRIVACY_POLICY_URL="https://telcosec.net/privacy"
 UBUNTU_CODENAME=noble
 EOF

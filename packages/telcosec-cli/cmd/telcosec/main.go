@@ -56,6 +56,7 @@ Commands:
   search <query>       Search installed 100 tools and desktop launchers by keyword
   docs                 Open offline documentation & operator reference in browser
   sdr [action]         SDR drivers, USB & 10GbE management (status | usb | 10g | firmware)
+  usb                  Alias for 'sdr usb' (USBFS buffer tuning; bash CLI parity)
   oran [action]        O-RAN Alliance security suite (status | e2-sim | o1-scan)
   sbi [action]         5G Core Service-Based Interface auditing (status | validate | fuzz)
   ntn [action]         Non-Terrestrial Networks & Satellite telecom (status | doppler)
@@ -284,6 +285,19 @@ func main() {
 		default:
 			fmt.Printf("Unknown SDR action: %s\nUsage: telcosec sdr [status|usb|10g|firmware]\n", action)
 			os.Exit(1)
+		}
+
+	case "usb":
+		// Bash CLI parity: `telcosec usb` → same as `telcosec sdr usb`
+		printBanner()
+		mb := telemetry.GetUSBFSMemoryMB()
+		fmt.Printf("%s=== USB Transceiver Buffer Tuning ===%s\n", telemetry.Bold, telemetry.Reset)
+		if mb >= 500 {
+			fmt.Printf("  usbfs_memory_mb = %s%d MB%s (Optimized for continuous high MSPS)\n\n", telemetry.Green, mb, telemetry.Reset)
+		} else {
+			fmt.Printf("  usbfs_memory_mb = %s%d MB%s (Recommends 1000 MB)\n", telemetry.Yellow, mb, telemetry.Reset)
+			fmt.Println("  To optimize: sudo sh -c 'echo 1000 > /sys/module/usbcore/parameters/usbfs_memory_mb'")
+			fmt.Println()
 		}
 
 	case "10g", "10gbe", "network":

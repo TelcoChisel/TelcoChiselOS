@@ -434,8 +434,20 @@ PROFILESCRIPT
 chmod +x /usr/local/bin/telcosec-profile
 
 # 11d. Unified TelcoSec Operator CLI, Shell Completions & Manual Pages
+# Layout:
+#   /usr/local/bin/telcosec       — bash wrapper (execs Go when present)
+#   /usr/local/libexec/telcosec   — Go binary (preferred implementation)
+#   /usr/local/bin/telcosec.bash  — explicit bash (TELCOSEC_FORCE_BASH=1 also works)
 echo "Deploying unified telcosec operator CLI, shell completions, and manpages..."
 CLI_DEPLOYED=0
+mkdir -p /usr/local/libexec
+if [ -f /tmp/scripts/bin/telcosec ]; then
+  install -m 755 /tmp/scripts/bin/telcosec /usr/local/bin/telcosec
+  install -m 755 /tmp/scripts/bin/telcosec /usr/local/bin/telcosec.bash
+  ln -sf /usr/local/bin/telcosec /usr/local/bin/telcochisel
+  echo "  Installed bash wrapper at /usr/local/bin/telcosec (+ telcosec.bash)"
+fi
+
 if [ -d /tmp/telcosec-cli ] && command -v go >/dev/null 2>&1; then
   echo "  Building standalone telcosec Go binary from source..."
   (
@@ -443,23 +455,18 @@ if [ -d /tmp/telcosec-cli ] && command -v go >/dev/null 2>&1; then
     make build
     make install-completions
     make install-man
-    install -m 755 bin/telcosec /usr/local/bin/telcosec
-    ln -sf /usr/local/bin/telcosec /usr/local/bin/telcochisel
-  ) && CLI_DEPLOYED=1 || echo "  Warning: In-chroot Go compilation failed, using fallback script."
+    install -m 755 bin/telcosec /usr/local/libexec/telcosec
+  ) && CLI_DEPLOYED=1 || echo "  Warning: In-chroot Go compilation failed — bash wrapper will run natively."
 fi
 
-if [ "$CLI_DEPLOYED" -eq 0 ] && [ -f /tmp/scripts/bin/telcosec ]; then
-  echo "  Installing in-tree telcosec script launcher..."
-  cp -f /tmp/scripts/bin/telcosec /usr/local/bin/telcosec
-  chmod 755 /usr/local/bin/telcosec
-  ln -sf /usr/local/bin/telcosec /usr/local/bin/telcochisel
-  if [ -d /tmp/telcosec-cli ]; then
-    (
-      cd /tmp/telcosec-cli
-      make install-completions 2>/dev/null || true
-      make install-man 2>/dev/null || true
-    )
-  fi
+if [ "$CLI_DEPLOYED" -eq 1 ]; then
+  echo "  Go CLI installed at /usr/local/libexec/telcosec (PATH wrapper will exec it)"
+elif [ -d /tmp/telcosec-cli ]; then
+  (
+    cd /tmp/telcosec-cli
+    make install-completions 2>/dev/null || true
+    make install-man 2>/dev/null || true
+  )
 fi
 
 if [ -f /tmp/scripts/bin/telcosec-create-usb ]; then

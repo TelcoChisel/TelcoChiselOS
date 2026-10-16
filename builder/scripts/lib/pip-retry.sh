@@ -1,4 +1,5 @@
 #!/bin/bash
+# shellcheck shell=bash
 # =============================================================================
 # lib/pip-retry.sh — shared pip retry helpers
 #

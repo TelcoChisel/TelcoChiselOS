@@ -21,8 +21,8 @@
     "website": "https://telcochisel.com",
     "download_url": "https://sourceforge.net/projects/telcochisel/files/",
     "documentation_url": "https://telcochisel.com",
-    "repository_url": "https://github.com/TelcoSec-Tools/TelcoChiselOS",
-    "issue_tracker": "https://github.com/TelcoSec-Tools/TelcoChiselOS/issues",
+    "repository_url": "https://github.com/TelcoChisel/TelcoChiselOS",
+    "issue_tracker": "https://github.com/TelcoChisel/TelcoChiselOS/issues",
     "rss_feed": "https://telcochisel.com/feed.xml",
     "news_sitemap": "https://telcochisel.com/sitemap-news.xml"
   },

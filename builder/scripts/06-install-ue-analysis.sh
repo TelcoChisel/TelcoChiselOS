@@ -32,13 +32,13 @@ cd /opt/telcosec
 clone_bg https://github.com/FirmWire/FirmWire.git /opt/telcosec/firmwire
 clone_bg https://github.com/forth32/balongflash.git /opt/telcosec/balong-flash
 clone_bg https://github.com/forth32/balong-nvtool.git /opt/telcosec/balongtool
-clone_bg https://github.com/bkerler/mtkclient.git /opt/telcosec/mtkclient
-clone_bg https://github.com/osmocom/pysim.git /opt/telcosec/pysim
-clone_bg https://github.com/estkme-group/lpac.git /opt/telcosec/lpac
+clone_bg https://github.com/bkerler/mtkclient.git /opt/telcosec/mtkclient v2.1.4.1
+clone_bg https://github.com/osmocom/pysim.git /opt/telcosec/pysim 1.0
+clone_bg https://github.com/estkme-group/lpac.git /opt/telcosec/lpac v2.3.0
 clone_bg https://github.com/osmocom/simtrace2.git /opt/telcosec/simtrace2
 clone_bg https://github.com/tomasz-lisowski/simurai.git /opt/telcosec/simurai --recurse-submodules --shallow-submodules
 clone_bg https://github.com/my5G/my5G-RANTester.git /opt/telcosec/my5g-rantester
-clone_bg https://github.com/osmocom/osmocom-bb.git /opt/telcosec/osmocom-bb
+clone_bg https://github.com/osmocom/osmocom-bb.git /opt/telcosec/osmocom-bb 0.2.0
 
 # Wait for all clones to complete and fail loudly on any clone failure
 if ! wait_clones "UE analysis repos"; then
@@ -420,6 +420,7 @@ fi
 INSTALL_DIR="/opt/telcosec/osmocom-bb"
 if [ ! -d "$INSTALL_DIR/.git" ]; then
   echo "[1/3] Cloning osmocom-bb..."
+  git clone --depth 1 --branch 0.2.0 https://github.com/osmocom/osmocom-bb.git "$INSTALL_DIR" 2>/dev/null || \
   git clone --depth 1 https://github.com/osmocom/osmocom-bb.git "$INSTALL_DIR" 2>/dev/null || \
   git clone --depth 1 https://gitea.osmocom.org/phone-side/osmocom-bb.git "$INSTALL_DIR"
 fi

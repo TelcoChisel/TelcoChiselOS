@@ -1,0 +1,29 @@
+#!/bin/bash
+# Launch the built fuzzer, selecting the radio conf recorded at install time.
+INSTALL_DIR="${TELCOSEC_5GHOUL_DIR:-/opt/telcosec/5ghoul}"
+FUZZER="$INSTALL_DIR/build/5g_fuzzer"
+
+if [ ! -x "$FUZZER" ] && [ ! -f "$FUZZER" ]; then
+  echo "5Ghoul is not built yet."
+  echo "  sudo 5ghoul-install --radio BLADERF"
+  echo "  sudo 5ghoul-install --radio USRP"
+  echo "  sudo 5ghoul-install --radio LIMESDR"
+  exit 1
+fi
+
+cd "$INSTALL_DIR"
+RADIO_BACKEND="USRP"
+[ -f "$INSTALL_DIR/.radio-backend" ] && RADIO_BACKEND="$(cat "$INSTALL_DIR/.radio-backend")"
+
+EXTRA_ARGS=()
+if [[ "$RADIO_BACKEND" =~ ^(BLADERF|LIMESDR)$ ]] && ! printf '%s\n' "$@" | grep -q -- '--gnb.conf'; then
+  SEARCH_TERM="$(echo "$RADIO_BACKEND" | tr '[:upper:]' '[:lower:]')"
+  BCONF="${INSTALL_DIR}/conf/gnb_${SEARCH_TERM}.conf"
+  [ -f "$BCONF" ] || BCONF="${INSTALL_DIR}/configs/5gnr_gnb/n78.106.${SEARCH_TERM}.conf"
+  if [ -f "$BCONF" ]; then
+    echo "Auto-selected ${RADIO_BACKEND} gNB config: $BCONF"
+    EXTRA_ARGS=(--gnb.conf "$BCONF")
+  fi
+fi
+
+exec sudo "$FUZZER" "${EXTRA_ARGS[@]}" "$@"

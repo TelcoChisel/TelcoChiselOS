@@ -43,11 +43,11 @@ concurrency:
 # "Set ISO Environment Name" step via $GITHUB_ENV (versioned or nightly
 # name). A static default here would shadow that and cause stale filenames.
 env:
-  SF_USER: ${{ secrets.SF_USER }}
   SF_PROJECT: telcochisel
   SF_HOST: frs.sourceforge.net
-  SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
-  SF_API_KEY: ${{ secrets.SF_API_KEY }}
+  # Booleans only — inject SF_SSH_KEY / SF_USER / SF_API_KEY only in steps that need them.
+  HAS_SF_KEY: ${{ secrets.SF_SSH_KEY != '' }}
+  HAS_SF_API: ${{ secrets.SF_API_KEY != '' }}
 
 jobs:
   # Weekly cron: skip the whole build when main hasn't moved since the last
@@ -84,9 +84,11 @@ jobs:
 
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
-          fetch-depth: 0
+          # Schedule/nightly only needs HEAD; tag/version bumps need full history + tags.
+          fetch-depth: ${{ github.event_name == 'schedule' && 1 || 0 }}
+          fetch-tags: ${{ github.event_name != 'schedule' }}
           token: ${{ secrets.GITHUB_TOKEN }}
 
       # ── Determine version & release mode ────────────────────────────────────
@@ -95,6 +97,11 @@ jobs:
         run: |
           RELEASE_TYPE="${{ inputs.release_type }}"
           FLAVOR="${{ inputs.build_flavor || 'full' }}"
+          # Weekly cron stays on the lite ISO — full builds are tag / manual only.
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            FLAVOR="lite"
+            RELEASE_TYPE="nightly"
+          fi
           # tag push always produces a versioned release, overriding the input
           if [[ "$GITHUB_REF" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF_NAME}"
@@ -185,21 +192,22 @@ jobs:
             /etc/apt-cacher-ng/acng.conf || true
           sudo systemctl restart apt-cacher-ng
 
-      # Cache keys include github.run_id so the SAVE key is unique every run —
-      # actions/cache keys are immutable, so a fixed content-hash key means
-      # the first cache saved for that hash is never updated again (every
-      # later "hit" restores the same stale cache and silently skips saving
-      # a fresh one). restore-keys still lets us restore the most recent
-      # cache matching the content-hash prefix, so growth is preserved.
-      # Caches are only needed on ephemeral hosted runners — on self-hosted the
-      # apt-cacher-ng and ccache directories persist on the host disk between
-      # runs, and skipping the save step avoids multi-GB cache uploads per run.
+      # Weekly-rotated cache keys: actions/cache keys are immutable, so a
+      # unique key every run (e.g. github.run_id) uploads multi-GB blobs every
+      # time. One key per ISO week reuses the cache within the week and still
+      # refreshes via restore-keys when the content hash changes.
+      # Hosted runners only — self-hosted keeps apt-cacher-ng/ccache on disk.
+      - name: Cache week id
+        if: env.RUNNER_ENVIRONMENT == 'github-hosted'
+        id: cacheweek
+        run: echo "week=$(date -u +%Y-%U)" >> "$GITHUB_OUTPUT"
+
       - name: Restore apt-cacher-ng cache
         if: env.RUNNER_ENVIRONMENT == 'github-hosted'
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: /var/cache/apt-cacher-ng
-          key: acng-noble-${{ hashFiles('builder/scripts/00-install-all-packages.sh') }}-${{ github.run_id }}
+          key: acng-noble-${{ hashFiles('builder/scripts/00-install-all-packages.sh') }}-${{ steps.cacheweek.outputs.week }}
           restore-keys: |
             acng-noble-${{ hashFiles('builder/scripts/00-install-all-packages.sh') }}-
             acng-noble-
@@ -211,17 +219,18 @@ jobs:
 
       - name: Restore ccache
         if: env.RUNNER_ENVIRONMENT == 'github-hosted'
-        uses: actions/cache@v4
+        uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
         with:
           path: /root/.ccache
-          key: ccache-${{ hashFiles('builder/scripts/*.sh') }}-${{ github.run_id }}
+          key: ccache-${{ hashFiles('builder/scripts/*.sh') }}-${{ steps.cacheweek.outputs.week }}
           restore-keys: |
             ccache-${{ hashFiles('builder/scripts/*.sh') }}-
             ccache-
 
       # ── Build ────────────────────────────────────────────────────────────────
+      # Catalog parity only needs Node for the sync script (no npm install).
       - name: Setup Node.js
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: '20'
 
@@ -305,7 +314,7 @@ jobs:
           cp "${ISO}.part-"* "${ISO}.sha256" "${ISO}.build-info.json" /tmp/iso-chunks/
 
       - name: Upload ISO artifact
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         with:
           name: TelcoChisel-${{ steps.version.outputs.version }}-${{ steps.version.outputs.flavor }}
           path: /tmp/iso-chunks/
@@ -365,10 +374,10 @@ jobs:
       # ── SourceForge FRS ──────────────────────────────────────────────────────
       # SourceForge is presented to users as the primary download host (see the
       # release notes below). If SF_SSH_KEY is absent every SF step below is
-      # silently skipped (`if: env.SF_SSH_KEY != ''`) and the job still goes
+      # silently skipped (`if: env.HAS_SF_KEY == 'true'`) and the job still goes
       # green — surface that clearly in the job summary instead of a quiet no-op.
       - name: Warn if SourceForge publish will be skipped
-        if: env.SF_SSH_KEY == ''
+        if: env.HAS_SF_KEY != 'true'
         run: |
           echo "### ⚠️ SourceForge publish SKIPPED" >> "$GITHUB_STEP_SUMMARY"
           echo "" >> "$GITHUB_STEP_SUMMARY"
@@ -376,7 +385,7 @@ jobs:
           echo "::warning::SF_SSH_KEY secret is absent — SourceForge publish skipped for this run"
 
       - name: Setup SSH for SourceForge
-        if: env.SF_SSH_KEY != ''
+        if: env.HAS_SF_KEY == 'true'
         env:
           SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
         run: |
@@ -390,9 +399,10 @@ jobs:
       # link) otherwise sees a bare folder listing (rolling/, v1.0.0/, ...)
       # with no explanation. Refreshes docs/SOURCEFORGE_FILES_README.md directly.
       - name: Upload SourceForge Files-root README
-        if: env.SF_SSH_KEY != ''
+        if: env.HAS_SF_KEY == 'true'
         env:
           SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+          SF_USER: ${{ secrets.SF_USER }}
         run: |
           SF_ROOT="/home/frs/project/$SF_PROJECT"
           SF_TARGET="$SF_USER,$SF_PROJECT@$SF_HOST"
@@ -409,9 +419,10 @@ jobs:
           echo "✓ SF root README → https://sourceforge.net/projects/$SF_PROJECT/files/"
 
       - name: Deploy to SourceForge — Nightly
-        if: env.SF_SSH_KEY != '' && steps.version.outputs.is_nightly == 'true'
+        if: env.HAS_SF_KEY == 'true' && steps.version.outputs.is_nightly == 'true'
         env:
           SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+          SF_USER: ${{ secrets.SF_USER }}
           VERSION:    ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
@@ -493,9 +504,10 @@ jobs:
           echo "✓ SF rolling → https://sourceforge.net/projects/$SF_PROJECT/files/rolling/"
 
       - name: Deploy to SourceForge — Versioned Release
-        if: env.SF_SSH_KEY != '' && steps.version.outputs.is_nightly == 'false'
+        if: env.HAS_SF_KEY == 'true' && steps.version.outputs.is_nightly == 'false'
         env:
           SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+          SF_USER: ${{ secrets.SF_USER }}
           VERSION:    ${{ steps.version.outputs.version }}
         run: |
           set -euo pipefail
@@ -563,10 +575,11 @@ jobs:
       - name: Pin Default Download on SourceForge
         if: >-
           steps.version.outputs.is_nightly == 'false' &&
-          env.SF_SSH_KEY != '' &&
-          env.SF_API_KEY != ''
+          env.HAS_SF_KEY == 'true' &&
+          env.HAS_SF_API == 'true'
         env:
           VERSION: ${{ steps.version.outputs.version }}
+          SF_API_KEY: ${{ secrets.SF_API_KEY }}
         run: |
           if [ -n "${SF_API_KEY:-}" ]; then
             echo "Setting default download on SourceForge for ${VERSION}/${ISO}..."

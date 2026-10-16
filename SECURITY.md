@@ -10,8 +10,9 @@ Security patches and dependency updates are applied to the active major release:
 
 | Release Version | Supported | Maintenance Status |
 | :--- | :--- | :--- |
-| **3.0.x (Noble Numbat)** | :white_check_mark: **Yes** | Active development, kernel security updates, tool updates |
-| 1.1.x (Public Beta) | :x: No | End of Life (upgrade to v3.0.0) |
+| **2026.x (Noble Numbat)** | :white_check_mark: **Yes** | Active development (`VERSION` = `YYYY.R`; tags `v2026.2`) |
+| 3.0.x / 3.1.x (legacy semver tags) | :white_check_mark: **Yes** | Same Noble line; prefer date-based `2026.x` naming going forward |
+| 1.1.x (Public Beta) | :x: No | End of Life (upgrade to 2026.x) |
 | 1.0.x (Initial POC) | :x: No | End of Life |
 
 ---
@@ -21,7 +22,7 @@ Security patches and dependency updates are applied to the active major release:
 If you discover a security vulnerability within the TelcoChisel distribution, please report it privately rather than opening a public issue.
 
 ### Preferred Method: GitHub Private Security Advisory
-1. Navigate to the [TelcoChisel Security Advisories](https://github.com/TelcoSec-Tools/TelcoChiselOS/security/advisories) page.
+1. Navigate to the [TelcoChisel Security Advisories](https://github.com/TelcoChisel/TelcoChiselOS/security/advisories) page.
 2. Click **Report a vulnerability** to open a confidential advisory draft.
 3. Provide a detailed summary, proof-of-concept steps, and affected components.
 

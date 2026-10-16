@@ -1,5 +1,5 @@
 #!/bin/bash
-set -eo pipefail
+set -euo pipefail
 
 echo "Installing Nginx, PHP-FPM, PostgreSQL, and dashboard PHP extensions..."
 
@@ -68,13 +68,17 @@ if [ -d "$DASHBOARD_SRC" ] && [ -n "$(ls -A "$DASHBOARD_SRC" 2>/dev/null)" ]; th
     # unit below. Only write if the deployed tree didn't already ship one.
     if [ ! -f /var/www/html/.env ] && [ -f /var/www/html/.env.example ]; then
       cp /var/www/html/.env.example /var/www/html/.env
+      # Placeholder only — first-boot telcosec-dashboard-db-init.sh replaces
+      # DB_PASS with a per-install openssl random secret and creates the role.
       sed -i \
         -e "s/^DB_HOST=.*/DB_HOST=127.0.0.1/" \
         -e "s/^DB_PORT=.*/DB_PORT=5432/" \
         -e "s/^DB_NAME=.*/DB_NAME=osmocom/" \
         -e "s/^DB_USER=.*/DB_USER=osmocom/" \
-        -e "s/^DB_PASS=.*/DB_PASS=osmocom123/" \
+        -e "s/^DB_PASS=.*/DB_PASS=CHANGE_ME_AT_FIRST_BOOT/" \
         /var/www/html/.env
+      chmod 640 /var/www/html/.env
+      chown www-data:www-data /var/www/html/.env
     fi
 
     # Vendor libraries (Ratchet, Symfony Process, phpdotenv, Monolog) the
@@ -114,8 +118,12 @@ server {
         fastcgi_pass unix:/var/run/php/php${PHP_VER}-fpm.sock;
     }
 
-    location ~ /\.ht {
+    # Deny all dotfiles/dotdirs (.env, .git, .htaccess, etc.) — try_files
+    # would otherwise serve /var/www/html/.env with DB credentials.
+    location ~ /\. {
         deny all;
+        access_log off;
+        log_not_found off;
     }
 }
 EOF
@@ -157,14 +165,37 @@ OSMO_SERVICES=(
 #     directory, not the whole filesystem.
 # If the dashboard needs to control a NEW service or path, add an explicit
 # scoped rule here — do not revert to a wildcard.
+# Path-guarded helpers — sudoers must not use `*` arg wildcards (they match `/`).
+cat > /usr/local/bin/telcosec-dashboard-mkdir << 'HELPER'
+#!/bin/bash
+set -euo pipefail
+TARGET="${1:-/opt/telcosec/gsm_data}"
+case "$TARGET" in
+  /opt/telcosec/gsm_data|/opt/telcosec/gsm_data/*) ;;
+  *) echo "telcosec-dashboard-mkdir: refused path outside /opt/telcosec/gsm_data: $TARGET" >&2; exit 1 ;;
+esac
+exec /bin/mkdir -p "$TARGET"
+HELPER
+cat > /usr/local/bin/telcosec-dashboard-chown << 'HELPER'
+#!/bin/bash
+set -euo pipefail
+TARGET="${1:-/opt/telcosec/gsm_data}"
+case "$TARGET" in
+  /opt/telcosec/gsm_data|/opt/telcosec/gsm_data/*) ;;
+  *) echo "telcosec-dashboard-chown: refused path outside /opt/telcosec/gsm_data: $TARGET" >&2; exit 1 ;;
+esac
+exec /bin/chown -R telcosec:telcosec "$TARGET"
+HELPER
+chmod 0755 /usr/local/bin/telcosec-dashboard-mkdir /usr/local/bin/telcosec-dashboard-chown
+
 # NOTE: unquoted heredoc (unlike other sudoers examples) so $PHP_VER expands.
 cat > /etc/sudoers.d/dashboard-www-data << EOF
 www-data ALL=(telcosec) NOPASSWD: /usr/local/bin/open5gs-start
 www-data ALL=(telcosec) NOPASSWD: /usr/local/bin/open5gs-stop
 www-data ALL=(telcosec) NOPASSWD: /bin/systemctl restart nginx
 www-data ALL=(telcosec) NOPASSWD: /bin/systemctl restart php${PHP_VER}-fpm
-www-data ALL=(telcosec) NOPASSWD: /bin/mkdir -p /opt/telcosec/gsm_data/*
-www-data ALL=(telcosec) NOPASSWD: /bin/chown -R telcosec\:telcosec /opt/telcosec/gsm_data/*
+www-data ALL=(telcosec) NOPASSWD: /usr/local/bin/telcosec-dashboard-mkdir, /usr/local/bin/telcosec-dashboard-mkdir *
+www-data ALL=(telcosec) NOPASSWD: /usr/local/bin/telcosec-dashboard-chown, /usr/local/bin/telcosec-dashboard-chown *
 EOF
 for svc in "${OSMO_SERVICES[@]}"; do
   for verb in start stop restart; do
@@ -262,6 +293,8 @@ cat > /usr/local/bin/telcosec-dashboard-db-init.sh << 'EOF'
 #!/bin/bash
 set -e
 SENTINEL=/opt/telcosec/gsm_data/.db-initialized
+ENV_FILE=/var/www/html/.env
+PASS_FILE=/etc/telcosec/dashboard-db.pass
 [ -f "$SENTINEL" ] && exit 0
 
 for i in $(seq 1 30); do
@@ -269,10 +302,34 @@ for i in $(seq 1 30); do
   sleep 1
 done
 
+# Per-install random DB password (never ship a fixed public secret).
+mkdir -p /etc/telcosec
+if [ -f "$PASS_FILE" ] && [ -s "$PASS_FILE" ]; then
+  DB_PASS=$(tr -d '\n\r' < "$PASS_FILE")
+else
+  DB_PASS=$(openssl rand -hex 16)
+  umask 077
+  printf '%s\n' "$DB_PASS" > "$PASS_FILE"
+  chmod 600 "$PASS_FILE"
+  chown root:root "$PASS_FILE"
+fi
+
+if [ -f "$ENV_FILE" ]; then
+  sed -i "s/^DB_PASS=.*/DB_PASS=${DB_PASS}/" "$ENV_FILE"
+  chmod 640 "$ENV_FILE"
+  chown www-data:www-data "$ENV_FILE"
+fi
+
+# Escape single quotes for SQL literal: ' -> ''
+DB_PASS_SQL=${DB_PASS//\'/\'\'}
+
 sudo -u postgres psql -tc "SELECT 1 FROM pg_roles WHERE rolname='osmocom'" | grep -q 1 || \
-  sudo -u postgres psql -c "CREATE ROLE osmocom LOGIN PASSWORD 'osmocom123';"
+  sudo -u postgres psql -c "CREATE ROLE osmocom LOGIN PASSWORD '${DB_PASS_SQL}';"
 sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='osmocom'" | grep -q 1 || \
   sudo -u postgres psql -c "CREATE DATABASE osmocom OWNER osmocom;"
+
+# Keep password in sync if the role already existed from a prior partial run.
+sudo -u postgres psql -c "ALTER ROLE osmocom WITH PASSWORD '${DB_PASS_SQL}';" >/dev/null
 
 if [ -f /var/www/html/install.php ]; then
   php /var/www/html/install.php || \

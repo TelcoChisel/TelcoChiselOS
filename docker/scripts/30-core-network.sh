@@ -67,10 +67,13 @@ INSTALL_DIR="/opt/telcosec/srsRAN_Project"
 echo "=== srsRAN Project Builder (https://github.com/srsran/srsRAN_Project) ==="
 if [ ! -d "$INSTALL_DIR/.git" ]; then
   echo "[1/3] Cloning srsRAN_Project..."
-  git clone --depth 1 --recurse-submodules https://github.com/srsran/srsRAN_Project.git "$INSTALL_DIR"
+  if ! git clone --depth 1 --branch release_25_10 --recurse-submodules \
+      https://github.com/srsran/srsRAN_Project.git "$INSTALL_DIR"; then
+    echo "[1/3] release_25_10 unavailable — cloning default branch"
+    git clone --depth 1 --recurse-submodules https://github.com/srsran/srsRAN_Project.git "$INSTALL_DIR"
+  fi
 else
-  echo "[1/3] Already cloned, pulling latest..."
-  git -C "$INSTALL_DIR" pull || true
+  echo "[1/3] Already cloned — leaving existing checkout (no floating pull)"
 fi
 cd "$INSTALL_DIR"
 mkdir -p build && cd build
@@ -86,22 +89,30 @@ chmod +x /usr/local/bin/srsran-install
 
 # ─── 3. Open5GS first-run installer (from 03-install-core-network.sh) ──────
 # NOTE: this drives `docker compose` FROM INSIDE the container — it needs a
-# mounted host docker socket (-v /var/run/docker.sock:/var/run/docker.sock),
-# see docker/compose.yaml and docker/README.md "Known limitations".
+# mounted host docker socket (opt-in compose override), see docker/README.md.
 cat << 'OPEN5GS_SCRIPT' > /usr/local/bin/open5gs-install
 #!/bin/bash
 set -e
 echo "=== Open5GS 5G SA Core Docker Installer (https://open5gs.org) ==="
 if ! command -v docker >/dev/null 2>&1; then
   echo "ERROR: docker CLI not found in this container."
-  echo "Mount the host docker socket: -v /var/run/docker.sock:/var/run/docker.sock"
-  echo "and install the docker CLI, or run open5gs-install on the host instead."
+  echo "Opt in to the host socket (lab hosts only):"
+  echo "  docker compose -f docker/compose.yaml -f docker/compose.docker-sock.yaml run --rm core-network"
+  echo "Or run open5gs-install on the host instead."
+  exit 1
+fi
+if [ ! -S /var/run/docker.sock ]; then
+  echo "ERROR: /var/run/docker.sock is not mounted."
+  echo "Use docker/compose.docker-sock.yaml (opt-in) or bind-mount the socket explicitly."
   exit 1
 fi
 mkdir -p /opt/telcosec/open5gs
 cd /opt/telcosec/open5gs
+OPEN5GS_DOCKER_SHA="1f3bcf73f926b5b7526ef3c41cd2b839c2b17ac3"
 if [ ! -d "/opt/telcosec/open5gs/docker_open5gs/.git" ]; then
   git clone https://github.com/herlesupreeth/docker_open5gs
+  git -C docker_open5gs checkout "$OPEN5GS_DOCKER_SHA" \
+    || echo "WARNING: could not checkout $OPEN5GS_DOCKER_SHA — using clone HEAD"
 fi
 cd docker_open5gs
 echo "Pulling Open5GS Docker images..."
@@ -136,7 +147,8 @@ case "$RADIO" in
   *) echo "Unknown --radio value: $RADIO. Options: USRP, BLADERF, LMSSDR"; exit 1 ;;
 esac
 if [ ! -d /opt/telcosec/oai ]; then
-  git clone --depth 1 https://gitlab.eurecom.fr/oai/openairinterface5g.git /opt/telcosec/oai
+  git clone --depth 1 --branch 2026.w38 https://gitlab.eurecom.fr/oai/openairinterface5g.git /opt/telcosec/oai \
+    || git clone --depth 1 https://gitlab.eurecom.fr/oai/openairinterface5g.git /opt/telcosec/oai
 fi
 cd /opt/telcosec/oai
 source oaienv
@@ -163,8 +175,9 @@ if [ ! -d /lib/modules/"$(uname -r)"/build ]; then
   exit 1
 fi
 if [ ! -d /opt/telcosec/gtp5g ]; then
-  echo "Cloning gtp5g source..."
-  git clone --depth 1 https://github.com/free5gc/gtp5g /opt/telcosec/gtp5g
+  echo "Cloning gtp5g source (v0.10.2)..."
+  git clone --depth 1 --branch v0.10.2 https://github.com/free5gc/gtp5g /opt/telcosec/gtp5g \
+    || git clone --depth 1 https://github.com/free5gc/gtp5g /opt/telcosec/gtp5g
 fi
 cd /opt/telcosec/gtp5g
 [ -f gtp5g.ko ] || make -j"$(nproc)"
@@ -178,6 +191,10 @@ chmod +x /usr/local/bin/gtp5g-load
 cat << 'GHOUL_SCRIPT' > /usr/local/bin/5ghoul-install
 #!/bin/bash
 set -e
+if [ -x /opt/telcosec/5ghoul-overlay/scripts/install.sh ]; then
+  exec /opt/telcosec/5ghoul-overlay/scripts/install.sh "$@"
+fi
+echo "BladeRF/LimeSDR: use the telcochisel-5ghoul image (this core-network helper is the USRP-oriented fallback)."
 INSTALL_DIR="/opt/telcosec/5ghoul"
 RADIO="USRP"
 while [[ $# -gt 0 ]]; do
@@ -203,8 +220,15 @@ cd "$INSTALL_DIR"
 echo "[2/3] Running upstream requirements.sh..."
 [ -f requirements.sh ] && bash requirements.sh || true
 echo "[3/3] Running upstream build.sh (this is the 20-60 min step)..."
-if [ "$RADIO" != "USRP" ] && [ -f build.sh ]; then
-  sed -i "s/-w USRP\b/-w ${RADIO}/g" build.sh 2>/dev/null || true
+OAI_HW="USRP"
+case "$RADIO" in
+  BLADERF) OAI_HW="BLADERF" ;;
+  LIMESDR) OAI_HW="LMSSDR" ;;
+esac
+if [ "$OAI_HW" != "USRP" ]; then
+  while IFS= read -r -d '' f; do
+    sed -i "s/-w USRP\\b/-w ${OAI_HW}/g" "$f"
+  done < <(grep -rlZ --include='*.sh' --exclude-dir=.git -- '-w USRP' . || true)
 fi
 bash build.sh all 2>&1 | tee /tmp/5ghoul-build.log
 echo ""

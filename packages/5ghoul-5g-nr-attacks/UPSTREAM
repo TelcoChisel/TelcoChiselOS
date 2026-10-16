@@ -1,0 +1,4 @@
+# Pinned upstream tree this overlay applies to.
+# Sourceable by scripts/install.sh. Update both fields together.
+UPSTREAM_REPO=https://github.com/asset-group/5ghoul-5g-nr-attacks
+UPSTREAM_REF=452c8cedde810941e0bdd2dfac6da1b5079c42bf

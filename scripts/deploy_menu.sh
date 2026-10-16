@@ -47,7 +47,7 @@ if [ -f "${REPO_ROOT}/VERSION" ]; then
   VERSION="${VERSION#v}"
 fi
 
-IMAGE_REGISTRY="${TELCOCHISEL_REGISTRY:-ghcr.io/telcosec-tools}"
+IMAGE_REGISTRY="${TELCOCHISEL_REGISTRY:-ghcr.io/telcochisel}"
 
 # ─── Banner Display ───────────────────────────────────────────────────────────
 show_banner() {

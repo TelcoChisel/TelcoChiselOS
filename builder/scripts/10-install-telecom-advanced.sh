@@ -26,19 +26,20 @@ source "${SCRIPT_DIR}/lib/build-tool.sh"
 # Best-effort prefetch (deferred-installer pattern — first-run helpers
 # re-clone if missing), but failures are reported so a silently missing
 # repo is visible in the build log.
-echo "  Cloning repositories in parallel..."
+echo "  Cloning repositories in parallel (pinned refs where available)..."
 mkdir -p "$TELCOSEC_OPT"
-clone_bg https://github.com/aligungr/UERANSIM                     "${TELCOSEC_OPT}/ueransim"
-clone_bg https://github.com/fgsect/scat                           "${TELCOSEC_OPT}/scat"
+# Args: url dir [tag/branch] — see lib/build-tool.sh _clone_git
+clone_bg https://github.com/aligungr/UERANSIM                     "${TELCOSEC_OPT}/ueransim"       v3.3.0
+clone_bg https://github.com/fgsect/scat                           "${TELCOSEC_OPT}/scat"           v2.1.1
 clone_bg https://github.com/scateu/kalibrate-hackrf               "${TELCOSEC_OPT}/kalibrate-gsm"
 clone_bg https://github.com/Synacktiv-contrib/Modmobmap           "${TELCOSEC_OPT}/modmobmap"
 clone_bg https://github.com/srlabs/SIMtester                      "${TELCOSEC_OPT}/simtester"
 clone_bg https://github.com/yatebts/yatebts                       "${TELCOSEC_OPT}/yatebts"
-clone_bg https://github.com/RangeNetworks/openbts                 "${TELCOSEC_OPT}/openbts"
+clone_bg https://github.com/RangeNetworks/openbts                 "${TELCOSEC_OPT}/openbts"        v4.0.0
 clone_bg https://github.com/srsran/srsgui                         "${TELCOSEC_OPT}/srsgui"
 clone_bg https://github.com/Evrytania/LTE-Cell-Scanner            "${TELCOSEC_OPT}/lte-cellscanner"
-clone_bg https://github.com/SysSec-KAIST/LTESniffer               "${TELCOSEC_OPT}/ltesniffer"
-clone_bg https://github.com/free5gc/gtp5g                         "${TELCOSEC_OPT}/gtp5g"
+clone_bg https://github.com/SysSec-KAIST/LTESniffer               "${TELCOSEC_OPT}/ltesniffer"     LTESniffer-v2.1.0
+clone_bg https://github.com/free5gc/gtp5g                         "${TELCOSEC_OPT}/gtp5g"          v0.10.2
 clone_bg https://github.com/TelcoSec-Tools/RDNSx                  "${TELCOSEC_OPT}/rdnsx"
 clone_bg https://github.com/rlaager/docsis                        "${TELCOSEC_OPT}/docsis"
 clone_bg https://github.com/fkie-cad/FALCON                       "${TELCOSEC_OPT}/falcon"
@@ -263,8 +264,9 @@ cat > /usr/local/bin/openbts-install << 'SCRIPT'
 set -e
 echo "=== OpenBTS Install ==="
 if [ ! -d /opt/telcosec/openbts ]; then
-  echo "Cloning OpenBTS source..."
-  git clone --depth 1 https://github.com/RangeNetworks/openbts /opt/telcosec/openbts
+  echo "Cloning OpenBTS source (v4.0.0)..."
+  git clone --depth 1 --branch v4.0.0 https://github.com/RangeNetworks/openbts /opt/telcosec/openbts \
+    || git clone --depth 1 https://github.com/RangeNetworks/openbts /opt/telcosec/openbts
 fi
 cd /opt/telcosec/openbts
 # OpenBTS requires libosip2, libexosip2, liba53
@@ -341,8 +343,9 @@ cat > /usr/local/bin/gtp5g-load << 'GSCRIPT'
 set -e
 # Build (if needed) and load the 5G GTP kernel module
 if [ ! -d /opt/telcosec/gtp5g ]; then
-  echo "Cloning gtp5g source..."
-  git clone --depth 1 https://github.com/free5gc/gtp5g /opt/telcosec/gtp5g
+  echo "Cloning gtp5g source (v0.10.2)..."
+  git clone --depth 1 --branch v0.10.2 https://github.com/free5gc/gtp5g /opt/telcosec/gtp5g \
+    || git clone --depth 1 https://github.com/free5gc/gtp5g /opt/telcosec/gtp5g
 fi
 cd /opt/telcosec/gtp5g
 [ -f gtp5g.ko ] || make -j$(nproc)
@@ -385,7 +388,8 @@ esac
 # re-running this script after a partial/failed first attempt aborts
 # immediately with "destination path already exists" under set -e.
 if [ ! -d /opt/telcosec/oai ]; then
-  git clone --depth 1 https://gitlab.eurecom.fr/oai/openairinterface5g.git /opt/telcosec/oai
+  git clone --depth 1 --branch 2026.w38 https://gitlab.eurecom.fr/oai/openairinterface5g.git /opt/telcosec/oai \
+    || git clone --depth 1 https://gitlab.eurecom.fr/oai/openairinterface5g.git /opt/telcosec/oai
 fi
 cd /opt/telcosec/oai
 source oaienv
@@ -582,7 +586,8 @@ fi
 
 # 3. RouterSploit (Embedded device exploitation framework)
 if [ ! -d "${TELCOSEC_OPT}/routersploit" ]; then
-  git clone --depth 1 https://github.com/threat9/routersploit "${TELCOSEC_OPT}/routersploit" 2>/dev/null || true
+  git clone --depth 1 --branch v3.4.7 https://github.com/threat9/routersploit "${TELCOSEC_OPT}/routersploit" 2>/dev/null \
+    || git clone --depth 1 https://github.com/threat9/routersploit "${TELCOSEC_OPT}/routersploit" 2>/dev/null || true
 fi
 if [ -d "${TELCOSEC_OPT}/routersploit" ]; then
   cd "${TELCOSEC_OPT}/routersploit"

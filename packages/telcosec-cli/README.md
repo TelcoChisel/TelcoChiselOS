@@ -1,7 +1,7 @@
 # TelcoSec Operator CLI (`telcosec`)
 
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache%202.0-blue.svg)](https://opensource.org/licenses/Apache-2.0)
-[![Go Report Card](https://goreportcard.com/badge/github.com/TelcoSec-Tools/telcosec-cli)](https://goreportcard.com/report/github.com/TelcoSec-Tools/telcosec-cli)
+[![Go Report Card](https://goreportcard.com/badge/github.com/TelcoChisel/telcosec-cli)](https://goreportcard.com/report/github.com/TelcoChisel/telcosec-cli)
 [![Platform: Linux](https://img.shields.io/badge/Platform-Linux%20(x86__64%20%7C%20arm64)-informational.svg)](https://telcochisel.com)
 
 The official standalone operator CLI and telemetry suite for telecom security engineers, cellular penetration testers, and SDR researchers. 
@@ -47,20 +47,20 @@ sudo apt-get update && sudo apt-get install -y telcosec-cli
 
 ### macOS & Linux (Homebrew)
 
-Install `telcosec` on macOS (Apple Silicon & Intel) or Linux via the official [TelcoSec Homebrew tap](https://github.com/TelcoSec-Tools/homebrew-tap):
+Install `telcosec` on macOS (Apple Silicon & Intel) or Linux via the official [TelcoChisel Homebrew tap](https://github.com/TelcoChisel/homebrew-tap):
 
 ```bash
-# Tap the official TelcoSec repository
-brew tap telcosec-tools/tap
+# Tap the official TelcoChisel repository
+brew tap telcochisel/tap
 
 # Install telcosec (includes shell completions & man pages)
 brew install telcosec
 
 # Or install directly in a single command:
-brew install telcosec-tools/tap/telcosec
+brew install telcochisel/tap/telcosec
 
 # To compile bleeding-edge from trunk:
-brew install --HEAD telcosec-tools/tap/telcosec
+brew install --HEAD telcochisel/tap/telcosec
 ```
 
 ### Docker & Container Image (Multi-Architecture)
@@ -69,25 +69,25 @@ Official multi-architecture container images (`linux/amd64` and `linux/arm64`) a
 
 ```bash
 # Pull and run directly
-docker run --rm -it ghcr.io/telcosec-tools/telcosec-cli version
+docker run --rm -it ghcr.io/telcochisel/telcosec-cli version
 
 # Comprehensive telecom environment audit
-docker run --rm -it ghcr.io/telcosec-tools/telcosec-cli check
+docker run --rm -it ghcr.io/telcochisel/telcosec-cli check
 
 # Decode SIM smartcard ATR
-docker run --rm -it ghcr.io/telcosec-tools/telcosec-cli sim atr 3B9F95801FC78031E073FE211B674A4C7380110043
+docker run --rm -it ghcr.io/telcochisel/telcosec-cli sim atr 3B9F95801FC78031E073FE211B674A4C7380110043
 
 # Host hardware diagnostics (with direct USB SDR and smartcard passthrough)
-docker run --rm -it --privileged --net=host -v /dev:/dev -v /sys:/sys ghcr.io/telcosec-tools/telcosec-cli hardware
+docker run --rm -it --privileged --net=host -v /dev:/dev -v /sys:/sys ghcr.io/telcochisel/telcosec-cli hardware
 ```
 
 ### Manual Debian Package Installation (.deb)
 
-Pre-built multi-architecture `.deb` packages (`amd64` and `arm64`) are available on the [GitHub Releases](https://github.com/TelcoSec-Tools/telcosec-cli/releases) page:
+Pre-built multi-architecture `.deb` packages (`amd64` and `arm64`) are available on the [GitHub Releases](https://github.com/TelcoChisel/telcosec-cli/releases) page:
 
 ```bash
 # Install via dpkg
-sudo dpkg -i telcosec-cli_3.0.0-1_amd64.deb
+sudo dpkg -i telcosec-cli_2026.2-1_amd64.deb
 ```
 
 ### Building Debian Package (.deb)
@@ -101,7 +101,7 @@ dpkg-buildpackage -us -uc -b
 
 ### Building from Source
 ```bash
-git clone https://github.com/TelcoSec-Tools/telcosec-cli.git
+git clone https://github.com/TelcoChisel/telcosec-cli.git
 cd telcosec-cli
 make build
 sudo make install

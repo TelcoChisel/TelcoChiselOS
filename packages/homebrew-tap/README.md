@@ -10,7 +10,7 @@ This is the official [Homebrew](https://brew.sh/) tap for the **TelcoSec** ecosy
 
 ```bash
 # 1. Tap the official repository
-brew tap telcosec-tools/tap
+brew tap telcochisel/tap
 
 # 2. Install telcosec
 brew install telcosec
@@ -19,7 +19,7 @@ brew install telcosec
 ### Option 2: Single-Line Direct Installation
 
 ```bash
-brew install telcosec-tools/tap/telcosec
+brew install telcochisel/tap/telcosec
 ```
 
 ### Option 3: Bleeding-Edge Build from Trunk (`HEAD`)
@@ -27,7 +27,7 @@ brew install telcosec-tools/tap/telcosec
 To compile the latest unreleased developments directly from the `main` branch of `telcosec-cli`:
 
 ```bash
-brew install --HEAD telcosec-tools/tap/telcosec
+brew install --HEAD telcochisel/tap/telcosec
 ```
 
 ---
@@ -36,8 +36,8 @@ brew install --HEAD telcosec-tools/tap/telcosec
 
 | Formula | Description | Status |
 | :--- | :--- | :--- |
-| **`telcosec`** | Unified Operator CLI for Telecom Security, SDR Diagnostics, 10GbE SFP+ Tuning, and 5G Core Operations | Stable `v3.0.0` |
-| **`telcochisel`** | Canonical alias for `telcosec` | Stable `v3.0.0` |
+| **`telcosec`** | Unified Operator CLI for Telecom Security, SDR Diagnostics, 10GbE SFP+ Tuning, and 5G Core Operations | Stable `v2026.2` |
+| **`telcochisel`** | Canonical alias for `telcosec` | Stable `v2026.2` |
 
 ---
 
@@ -80,7 +80,7 @@ To remove:
 
 ```bash
 brew uninstall telcosec
-brew untap telcosec-tools/tap
+brew untap telcochisel/tap
 ```
 
 ---
@@ -88,10 +88,10 @@ brew untap telcosec-tools/tap
 ## Automated Formula Bumping
 
 Formula updates are automated via GitHub Actions:
-- Whenever a new tag (e.g. `v3.0.1`) is published in [`telcosec-cli`](https://github.com/TelcoSec-Tools/telcosec-cli), the release pipeline dispatches a `bump-formula` event to this tap.
+- Whenever a new tag (e.g. `v3.0.1`) is published in [`telcosec-cli`](https://github.com/TelcoChisel/telcosec-cli), the release pipeline dispatches a `bump-formula` event to this tap.
 - Maintainers can also trigger an automated bump on-demand via the GitHub CLI:
   ```bash
-  gh workflow run bump.yml --repo TelcoSec-Tools/homebrew-tap -f version=v3.0.1
+  gh workflow run bump.yml --repo TelcoChisel/homebrew-tap -f version=v3.0.1
   ```
 - The workflow automatically fetches the release archive, computes and verifies the SHA256 checksum, updates `Formula/telcosec.rb`, runs `brew test-bot --only-tap-syntax` for audit compliance, and commits directly to `main`.
 
@@ -101,9 +101,9 @@ Formula updates are automated via GitHub Actions:
 
 - **TelcoChisel OS Documentation Portal**: [https://telcochisel.com](https://telcochisel.com)
 - **Official Metapackage CDN**: [https://meta.telcosec.net](https://meta.telcosec.net)
-- **Operator CLI Source Code**: [https://github.com/TelcoSec-Tools/telcosec-cli](https://github.com/TelcoSec-Tools/telcosec-cli)
-- **TelcoChisel OS Distribution**: [https://github.com/TelcoSec-Tools/TelcoChiselOS](https://github.com/TelcoSec-Tools/TelcoChiselOS)
-- **TelcoSec Organization**: [https://github.com/TelcoSec-Tools](https://github.com/TelcoSec-Tools)
+- **Operator CLI Source Code**: [https://github.com/TelcoChisel/telcosec-cli](https://github.com/TelcoChisel/telcosec-cli)
+- **TelcoChisel OS Distribution**: [https://github.com/TelcoChisel/TelcoChiselOS](https://github.com/TelcoChisel/TelcoChiselOS)
+- **TelcoChisel Organization**: [https://github.com/TelcoChisel](https://github.com/TelcoChisel)
 
 ## License
 

@@ -35,10 +35,14 @@ if [ "$(id -u)" -ne 0 ]; then
 fi
 if [ ! -d "$INSTALL_DIR/.git" ]; then
   echo "[1/3] Cloning srsRAN_Project..."
-  git clone --depth 1 --recurse-submodules https://github.com/srsran/srsRAN_Project.git "$INSTALL_DIR"
+  # Pin to a released tag; fall back to default branch if the tag disappears.
+  if ! git clone --depth 1 --branch release_25_10 --recurse-submodules \
+      https://github.com/srsran/srsRAN_Project.git "$INSTALL_DIR"; then
+    echo "[1/3] release_25_10 unavailable — cloning default branch"
+    git clone --depth 1 --recurse-submodules https://github.com/srsran/srsRAN_Project.git "$INSTALL_DIR"
+  fi
 else
-  echo "[1/3] Already cloned, pulling latest..."
-  git -C "$INSTALL_DIR" pull || true
+  echo "[1/3] Already cloned — leaving existing checkout (no floating pull)"
 fi
 cd "$INSTALL_DIR"
 mkdir -p build && cd build
@@ -71,8 +75,14 @@ echo "Setting up Open5GS Docker environment..."
 mkdir -p /opt/telcosec/open5gs
 cd /opt/telcosec/open5gs
 
+# Pin docker_open5gs to a known commit (repo has no release tags).
+OPEN5GS_DOCKER_SHA="1f3bcf73f926b5b7526ef3c41cd2b839c2b17ac3"
 if [ ! -d "/opt/telcosec/open5gs/docker_open5gs/.git" ]; then
   git clone https://github.com/herlesupreeth/docker_open5gs
+  git -C docker_open5gs checkout "$OPEN5GS_DOCKER_SHA" \
+    || echo "WARNING: could not checkout $OPEN5GS_DOCKER_SHA — using clone HEAD"
+else
+  echo "docker_open5gs already present — leaving checkout (expected $OPEN5GS_DOCKER_SHA)"
 fi
 
 cd docker_open5gs

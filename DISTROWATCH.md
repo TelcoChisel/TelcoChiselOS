@@ -32,8 +32,8 @@ This document provides the complete, structured submission package for listing *
 | **Official Homepage** | https://telcochisel.com |
 | **Documentation Portal** | https://telcochisel.com |
 | **Download Hub (SourceForge)** | https://sourceforge.net/projects/telcochisel/files/ |
-| **Primary Repository** | https://github.com/TelcoSec-Tools/TelcoChiselOS |
-| **Issue / Bug Tracker** | https://github.com/TelcoSec-Tools/TelcoChiselOS/issues |
+| **Primary Repository** | https://github.com/TelcoChisel/TelcoChiselOS |
+| **Issue / Bug Tracker** | https://github.com/TelcoChisel/TelcoChiselOS/issues |
 | **RSS / Release Feed** | https://telcochisel.com/feed.xml |
 | **Google News Sitemap** | https://telcochisel.com/sitemap-news.xml |
 
@@ -115,6 +115,6 @@ SHA256 (TelcoChisel-2026.1-lite-amd64.iso) = verified on SourceForge mirror
 - [x] Functional, dedicated website with comprehensive documentation ([telcochisel.com](https://telcochisel.com)).
 - [x] Bootable ISO images downloadable without barriers from a global CDN ([SourceForge](https://sourceforge.net/projects/telcochisel/files/)).
 - [x] Standardized package management (`APT` + `telcosec-pkg`).
-- [x] Active development on public version control ([GitHub](https://github.com/TelcoSec-Tools/TelcoChiselOS)).
-- [x] Public issue tracker and security vulnerability disclosure policy ([SECURITY.md](https://github.com/TelcoSec-Tools/TelcoChiselOS/blob/main/SECURITY.md)).
+- [x] Active development on public version control ([GitHub](https://github.com/TelcoChisel/TelcoChiselOS)).
+- [x] Public issue tracker and security vulnerability disclosure policy ([SECURITY.md](https://github.com/TelcoChisel/TelcoChiselOS/blob/main/SECURITY.md)).
 - [x] Open-source licensing compliance (GPL-3.0).

@@ -15,19 +15,19 @@ jobs:
     runs-on: ubuntu-24.04
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Setup Go
-        uses: actions/setup-go@v5
+        uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
         with:
           go-version: '1.22'
 
       - name: Compile Multi-Arch Binaries
         run: |
           mkdir -p dist
-          TAG_NAME="${GITHUB_REF_NAME:-v3.0.0}"
+          TAG_NAME="${GITHUB_REF_NAME:-v2026.2}"
           if [[ ! "${TAG_NAME}" =~ ^v?[0-9] ]]; then
-            TAG_NAME="v3.0.0"
+            TAG_NAME="v2026.2"
           fi
           COMMIT=$(git rev-parse --short HEAD 2>/dev/null || echo "release")
           BUILD_DATE=$(date -u +'%Y-%m-%dT%H:%M:%SZ')
@@ -82,8 +82,8 @@ jobs:
         env:
           TAP_TOKEN: ${{ secrets.HOMEBREW_TAP_TOKEN || secrets.GH_PAT }}
         run: |
-          TAG_NAME="${GITHUB_REF_NAME:-v3.0.0}"
-          ARCHIVE_URL="https://github.com/TelcoSec-Tools/telcosec-cli/archive/refs/tags/${TAG_NAME}.tar.gz"
+          TAG_NAME="${GITHUB_REF_NAME:-v2026.2}"
+          ARCHIVE_URL="https://github.com/TelcoChisel/telcosec-cli/archive/refs/tags/${TAG_NAME}.tar.gz"
           echo "[+] Fetching source archive to calculate SHA256: ${ARCHIVE_URL}"
 
           HTTP_STATUS=$(curl -sL -w "%{http_code}" -o archive.tar.gz "${ARCHIVE_URL}" || echo "000")
@@ -93,16 +93,16 @@ jobs:
             echo "[+] Archive SHA256: ${SHA256}"
 
             if [ -n "${TAP_TOKEN:-}" ]; then
-              echo "[+] Notifying TelcoSec-Tools/homebrew-tap to bump formula..."
+              echo "[+] Notifying TelcoChisel/homebrew-tap to bump formula..."
               curl -X POST \
                 -H "Accept: application/vnd.github.v3+json" \
                 -H "Authorization: token ${TAP_TOKEN}" \
-                https://api.github.com/repos/TelcoSec-Tools/homebrew-tap/dispatches \
+                https://api.github.com/repos/TelcoChisel/homebrew-tap/dispatches \
                 -d "{\"event_type\": \"bump-formula\", \"client_payload\": {\"version\": \"${TAG_NAME}\", \"sha256\": \"${SHA256}\"}}"
               echo "[+] Successfully triggered homebrew-tap bump!"
             else
               echo "[!] HOMEBREW_TAP_TOKEN secret not set. Skipping automatic tap bump."
-              echo "[i] Run 'Bump Formula' workflow in TelcoSec-Tools/homebrew-tap with version=${TAG_NAME} and sha256=${SHA256}"
+              echo "[i] Run 'Bump Formula' workflow in TelcoChisel/homebrew-tap with version=${TAG_NAME} and sha256=${SHA256}"
             fi
           else
             echo "[!] Warning: Release archive not yet available or failed download (status ${HTTP_STATUS})"

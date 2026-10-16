@@ -7,7 +7,7 @@ FROM ubuntu:24.04
 LABEL org.opencontainers.image.title="TelcoChisel ISO Builder" \
       org.opencontainers.image.description="Hermetic, reproducible Live ISO build environment for TelcoChiselOS" \
       org.opencontainers.image.vendor="TelcoSec" \
-      org.opencontainers.image.version="3.0.0"
+      org.opencontainers.image.version="2026.2"
 
 ENV DEBIAN_FRONTEND=noninteractive \
     LANG=C.UTF-8 \

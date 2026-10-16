@@ -17,7 +17,7 @@ spec:
   containers:
     # ─── 1. Protocol Auditor & Signaling Exploitation ────────────────────────
     - name: protocol-auditor
-      image: ghcr.io/telcosec-tools/telcochisel-base:latest
+      image: ghcr.io/telcochisel/telcochisel-base:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash
@@ -56,7 +56,7 @@ spec:
 
     # ─── 2. Core Network & RAN Simulation ────────────────────────────────────
     - name: core-network-lab
-      image: ghcr.io/telcosec-tools/telcochisel-core-network:latest
+      image: ghcr.io/telcochisel/telcochisel-core-network:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash
@@ -95,7 +95,7 @@ spec:
 
     # ─── 3. SDR RF Spectrum & Cellular Sniffing ──────────────────────────────
     - name: sdr-rf-monitor
-      image: ghcr.io/telcosec-tools/telcochisel-sdr:latest
+      image: ghcr.io/telcochisel/telcochisel-sdr:latest
       imagePullPolicy: IfNotPresent
       command:
         - /bin/bash

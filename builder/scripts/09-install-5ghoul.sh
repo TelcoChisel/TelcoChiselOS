@@ -112,7 +112,18 @@ echo "OPc  : E8ED289DEBA952E4283B54E88E6183CA"
 EOF
 sudo chmod +x /usr/local/bin/5ghoul-add-subscriber
 
-# ── BladeRF A4 config patcher ─────────────────────────────────────────────────
+# Stage packages/5ghoul-5g-nr-attacks into the image. 5ghoul-install execs it.
+if [ -d /tmp/5ghoul-overlay/scripts ]; then
+  mkdir -p /opt/telcosec
+  rm -rf /opt/telcosec/5ghoul-overlay
+  cp -a /tmp/5ghoul-overlay /opt/telcosec/5ghoul-overlay
+  chmod 755 /opt/telcosec/5ghoul-overlay/scripts/*.sh /opt/telcosec/5ghoul-overlay/scripts/5ghoul-run
+  chown -R telcosec:plugdev /opt/telcosec/5ghoul-overlay 2>/dev/null || true
+else
+  echo "WARNING: /tmp/5ghoul-overlay missing; 5ghoul-install will use the embedded patchers."
+fi
+
+# ── BladeRF A4 config patcher (fallback if the overlay was not staged) ──────
 # Translates USRP-specific OAI gNB conf files into BladeRF-compatible variants.
 # Key differences:
 #   sdr_addrs  "type=b200" → "bladerf"  (libbladeRF auto-selects the device)
@@ -122,6 +133,9 @@ sudo chmod +x /usr/local/bin/5ghoul-add-subscriber
 cat << 'PATCHSCRIPT' | sudo tee /usr/local/bin/5ghoul-bladerf-patch
 #!/bin/bash
 set -e
+if [ -x /opt/telcosec/5ghoul-overlay/scripts/apply-radio.sh ]; then
+  exec /opt/telcosec/5ghoul-overlay/scripts/apply-radio.sh --radio BLADERF --install-dir "${1:-/opt/telcosec/5ghoul}"
+fi
 INSTALL_DIR="${1:-/opt/telcosec/5ghoul}"
 
 echo "Patching OAI gNB configs for BladeRF A4..."
@@ -189,12 +203,11 @@ for build_script in "$INSTALL_DIR/build.sh" "$INSTALL_DIR"/build*.sh; do
   fi
 done
 
-# Patch any nested OAI build_oai calls in subdirectories
-find "$INSTALL_DIR" -name "*.sh" -not -path '*/.git/*' \
-  -exec grep -lq '\-w USRP' {} \; 2>/dev/null | while read -r f; do
+# Patch nested OAI build_oai calls, including requirements.sh (grep -l, not find -exec).
+while IFS= read -r -d '' f; do
   sed -i 's/-w USRP\b/-w BLADERF/g' "$f"
   echo "  Patched: $f"
-done
+done < <(grep -rlZ --include='*.sh' --exclude-dir=.git -- '-w USRP' "$INSTALL_DIR" 2>/dev/null || true)
 
 echo "BladeRF patch complete."
 PATCHSCRIPT
@@ -204,6 +217,9 @@ sudo chmod +x /usr/local/bin/5ghoul-bladerf-patch
 cat << 'PATCHSCRIPT' | sudo tee /usr/local/bin/5ghoul-limesdr-patch
 #!/bin/bash
 set -e
+if [ -x /opt/telcosec/5ghoul-overlay/scripts/apply-radio.sh ]; then
+  exec /opt/telcosec/5ghoul-overlay/scripts/apply-radio.sh --radio LIMESDR --install-dir "${1:-/opt/telcosec/5ghoul}"
+fi
 INSTALL_DIR="${1:-/opt/telcosec/5ghoul}"
 
 echo "Patching OAI gNB configs for LimeSDR Mini (Portuguese local testing optimization)..."
@@ -255,9 +271,9 @@ for build_script in "$INSTALL_DIR/build.sh" "$INSTALL_DIR"/build*.sh; do
   fi
 done
 
-find "$INSTALL_DIR" -name "*.sh" -not -path '*/.git/*' -exec grep -lq '\-w USRP' {} \; 2>/dev/null | while read -r f; do
+while IFS= read -r -d '' f; do
   sed -i 's/-w USRP\b/-w LMSSDR/g' "$f"
-done
+done < <(grep -rlZ --include='*.sh' --exclude-dir=.git -- '-w USRP' "$INSTALL_DIR" 2>/dev/null || true)
 
 echo "LimeSDR patch complete."
 PATCHSCRIPT
@@ -268,6 +284,9 @@ sudo chmod +x /usr/local/bin/5ghoul-limesdr-patch
 cat << 'INSTALLSCRIPT' | sudo tee /usr/local/bin/5ghoul-install
 #!/bin/bash
 set -e
+if [ -x /opt/telcosec/5ghoul-overlay/scripts/install.sh ]; then
+  exec /opt/telcosec/5ghoul-overlay/scripts/install.sh "$@"
+fi
 INSTALL_DIR="/opt/telcosec/5ghoul"
 RADIO="USRP"
 
@@ -544,6 +563,7 @@ if [[ "$RADIO_BACKEND" =~ ^(BLADERF|LIMESDR)$ ]] && ! printf '%s\n' "$@" | grep 
   SEARCH_TERM=$(echo "$RADIO_BACKEND" | tr '[:upper:]' '[:lower:]')
   # Try known conf path first (5Ghoul repo: conf/gnb_<radio>.conf), fall back to find
   BCONF="${INSTALL_DIR}/conf/gnb_${SEARCH_TERM}.conf"
+  [ -f "$BCONF" ] || BCONF="${INSTALL_DIR}/configs/5gnr_gnb/n78.106.${SEARCH_TERM}.conf"
   [ -f "$BCONF" ] || BCONF=$(find "$INSTALL_DIR" -name "*${SEARCH_TERM}*" -name '*.conf' 2>/dev/null | head -1)
   if [ -n "$BCONF" ] && [ -f "$BCONF" ]; then
     echo "Auto-selected $RADIO_BACKEND gNB config: $BCONF"

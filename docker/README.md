@@ -20,9 +20,10 @@ limitations" below before choosing a container over the ISO for a given task.
 
 | Image | Contents | Runtime needs |
 |-------|----------|----------------|
-| `telcochisel-base` | Headless CLI toolset: nmap, tshark, Scapy, SIPVicious, sctpscan, SigPloit, Diafuzzer, FirmWire, QCSuper, MTKClient, pySim, lpac, SIMtrace2, SIMurai, UERANSIM, SCAT, kalibrate-gsm, SIMTester, LTESniffer, RouterSploit, sipp, asleap, snmp-check, docsis, sipsak, voiphopper, rtpbleed, mausezahn (mz), sdr-info, telcosec-ran-status, telcosec-pkg, telcosec-academy, telcosec-prolabs, mitmproxy, pcsc-tools, OpenSC, telecom wordlists | none |
+| `telcochisel-base` | Headless CLI toolset + Go `telcosec` at `/usr/local/libexec/telcosec` (PATH bash wrapper; `telcosec.bash` / `TELCOSEC_FORCE_BASH=1` for bash): nmap, tshark, Scapy, SIPVicious, sctpscan, SigPloit, Diafuzzer, FirmWire, QCSuper, MTKClient, pySim, lpac, SIMtrace2, SIMurai, UERANSIM, SCAT, kalibrate-gsm, SIMTester, LTESniffer, RouterSploit, sipp, asleap, snmp-check, docsis, sipsak, voiphopper, rtpbleed, mausezahn (mz), sdr-info, telcosec-ran-status, telcosec-pkg, telcosec-academy, telcosec-prolabs, mitmproxy, pcsc-tools, OpenSC, telecom wordlists | none |
 | `telcochisel-sdr` | `FROM base` + SoapySDR/UHD/LimeSuite/HackRF/BladeRF/rtl-sdr, GNU Radio 3.10, GQRX, gr-gsm, kalibrate-rtl, URH, Inspectrum, Gpredict (conda `telcosec-sdr` env) | USB device passthrough; X11 for GUI tools |
 | `telcochisel-core-network` | `FROM base` + srsRAN/Open5GS/OAI-UE/5Ghoul first-run helper stubs and their build deps prebaked | `NET_ADMIN`, `/dev/net/tun`, often host networking |
+| `telcochisel-5ghoul` | `FROM base` + BladeRF/UHD userspace and the pinned 5Ghoul radio overlay (`packages/5ghoul-5g-nr-attacks`). Default radio is BladeRF. Compile with `sudo 5ghoul-install` | USB passthrough, `NET_ADMIN`, `/dev/net/tun` |
 | `telcochisel-device-tools` | `FROM base` + Heimdall, ADB/Fastboot, MTKClient wrappers, QCSuper, EDL, AT console | USB/serial device passthrough |
 
 Matches the ISO's own "ready" vs. "setup" tool taxonomy (see the main
@@ -51,7 +52,8 @@ In cellular and telco cloud architectures (Kubernetes, OpenShift, bare-metal Pod
 | `podman-telecom-pod.yaml` | Multi-container (Core + Scanner) | Instant rootless execution via `podman play kube` on Linux or WSL2 |
 | `k8s-5g-core-pod.yaml` | Multi-container (`open5gs-core` + `ueransim-tester`) | 5G Standalone Core & RAN simulation with shared localhost networking |
 | `k8s-sdr-rf-pod.yaml` | Real-time SDR engine | Over-the-air RF signal capture with `SYS_NICE` priority and USB passthrough |
-| `k8s-device-audit-pod.yaml` | Flasher + Baseband Decoder | Diagnostic dumping, EDL extraction, and FirmWire/SCAT analysis |
+| `k8s-device-audit-pod.yaml` | Flasher + Baseband Decoder | Non-privileged default; USB hostPath only |
+| `k8s-device-audit-pod.privileged.yaml` | Same (lab-only) | Opt-in `privileged: true` for full ttyUSB — **not** for shared clusters |
 | `k8s-telecom-suite-pod.yaml` | Unified multi-container suite | End-to-end telecom red team assessment across signaling, RAN, and RF |
 
 ### Rootless Quickstart with Podman (`play kube`)
@@ -116,6 +118,7 @@ docker build -f docker/base.Dockerfile         -t telcochisel-base .
 docker build -f docker/device-tools.Dockerfile -t telcochisel-device-tools .
 docker build -f docker/sdr.Dockerfile          -t telcochisel-sdr .
 docker build -f docker/core-network.Dockerfile -t telcochisel-core-network .
+docker build -f docker/5ghoul.Dockerfile       -t telcochisel-5ghoul .
 ```
 
 or with Compose:
@@ -126,7 +129,7 @@ docker compose -f docker/compose.yaml build
 
 `telcochisel-sdr` is the slowest build (UHD alone takes 15-20 minutes).
 
-The three add-on Dockerfiles accept a `BASE_IMAGE` build arg (default:
+The add-on Dockerfiles accept a `BASE_IMAGE` build arg (default:
 `telcochisel-base`, i.e. whatever you just built locally). CI overrides it to
 pull the freshly-pushed registry tag instead, since buildx's containerized
 builder doesn't share the local Docker daemon's image cache:
@@ -153,10 +156,20 @@ docker run --rm -it \
 docker run --rm -it \
   --device /dev/bus/usb --device /dev/ttyUSB0 \
   telcochisel-device-tools
+
+# 5Ghoul — BladeRF by default; compile on first run
+docker compose -f docker/compose.yaml run --rm 5ghoul
+# inside the container: sudo 5ghoul-install
 ```
 
 Or via Compose: `docker compose -f docker/compose.yaml run --rm sdr`, etc.
 See `docker/compose.yaml` for the full flag set per image.
+
+For nested Open5GS install (host Docker socket — lab hosts only):
+
+```bash
+docker compose -f docker/compose.yaml -f docker/compose.docker-sock.yaml run --rm core-network
+```
 
 ## Package reuse boundary
 
@@ -195,8 +208,9 @@ each helper's own `docker/scripts/30-core-network.sh` comments for detail:
   message rather than silently doing nothing; load it on the host instead.
 - **Open5GS.** Upstream's install flow is `docker compose` — a container-in-
   container pattern. `open5gs-install` needs a mounted host Docker socket
-  (see `docker/compose.yaml`'s `core-network` service) or true
-  Docker-in-Docker; it cannot work fully isolated.
+  (opt-in: `docker compose -f docker/compose.yaml -f docker/compose.docker-sock.yaml …`)
+  or true Docker-in-Docker; the default compose file does **not** mount
+  `docker.sock` (host-root equivalent).
 - **Realtime/PAM limits, `mitigations=off`, hugepages, sysctl tuning.** These
   are host-kernel/boot-cmdline concerns (see the ISO's `08-system-
   optimization.sh` and the "Security Posture" section of the main
@@ -214,7 +228,7 @@ each helper's own `docker/scripts/30-core-network.sh` comments for detail:
 ## CI / publishing
 
 `.github/workflows/docker.yml` builds all four images via a buildx matrix and
-pushes to `ghcr.io/telcosec-tools/telcochisel-{base,sdr,core-network,device-tools}`
+pushes to `ghcr.io/telcochisel/telcochisel-{base,sdr,core-network,device-tools}`
 on `workflow_dispatch` or `v*.*.*` tag pushes, tagged `latest` + the version.
 Independent of `.github/workflows/release.yml` (the ISO release path) — a
 Docker publish never blocks or is blocked by an ISO release.

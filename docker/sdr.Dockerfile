@@ -27,7 +27,7 @@ LABEL org.opencontainers.image.title="TelcoSec TelcoChisel SDR" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.url="https://telcochisel.com" \
       org.opencontainers.image.documentation="https://telcochisel.com" \
-      org.opencontainers.image.source="https://github.com/TelcoSec-Tools/TelcoChiselOS" \
+      org.opencontainers.image.source="https://github.com/TelcoChisel/TelcoChiselOS" \
       org.opencontainers.image.vendor="TelcoSec" \
       org.opencontainers.image.licenses="Apache-2.0" \
       net.telcosec.brand="TelcoSec" \
@@ -42,6 +42,8 @@ LABEL org.opencontainers.image.title="TelcoSec TelcoChisel SDR" \
       net.telcosec.academy.training="Master SDR cellular analysis and 2G-5G radio security at TelcoSec Academy: https://app.telcosec.net"
 
 USER root
+# Soft-fail optional tool builds even if BASE_IMAGE predates base.Dockerfile ENV.
+ENV TELCOSEC_ALLOW_TOOL_FAILURES=1
 COPY docker/scripts/20-sdr.sh /tmp/20-sdr.sh
 RUN bash /tmp/20-sdr.sh && rm -f /tmp/20-sdr.sh
 

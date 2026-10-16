@@ -101,6 +101,15 @@ record_tool_summary() {
     done
     echo ""
     echo "  Full log: $_TELCOSEC_LOG"
+    # Default: fail the ISO build when any instrumented tool is missing.
+    # Override for intentional best-effort builds:
+    #   TELCOSEC_ALLOW_TOOL_FAILURES=1 ./build-iso.sh ...
+    if [ "${TELCOSEC_ALLOW_TOOL_FAILURES:-0}" = "1" ]; then
+      echo "  WARNING: TELCOSEC_ALLOW_TOOL_FAILURES=1 — continuing despite $fail FAIL(s)."
+      return 0
+    fi
+    echo "  ERROR: $fail tool build(s) failed. Set TELCOSEC_ALLOW_TOOL_FAILURES=1 to override."
+    return 1
   fi
 
   return 0

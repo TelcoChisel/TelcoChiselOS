@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
     inputs:
       version_tag:
-        description: 'Version tag to publish (e.g. v2026.2, v3.0.0, or latest)'
+        description: 'Version tag to publish (e.g. v2026.2 or latest)'
         required: false
         default: 'latest'
       publish_ghcr:
@@ -16,16 +16,16 @@ on:
         description: 'Publish to Docker Hub (docker.io)'
         type: boolean
         required: false
-        default: true
+        default: false
       publish_digitalocean:
         description: 'Publish to DigitalOcean Container Registry (registry.digitalocean.com)'
         type: boolean
         required: false
-        default: true
+        default: false
       do_registry:
-        description: 'DigitalOcean Registry Name (e.g. telcosec)'
+        description: 'DigitalOcean Registry Name (e.g. telcochisel)'
         required: false
-        default: 'telcosec'
+        default: 'telcochisel'
       update_descriptions:
         description: 'Sync Markdown documentation to Docker Hub repository overview'
         type: boolean
@@ -46,8 +46,8 @@ concurrency:
 env:
   REGISTRY_GHCR: ghcr.io
   REGISTRY_DO: registry.digitalocean.com
-  DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME || 'telcosec' }}
-  DO_REGISTRY_DEFAULT: ${{ secrets.DO_REGISTRY_NAME || secrets.DO_REGISTRY || 'telcosec' }}
+  DOCKERHUB_NAMESPACE: ${{ secrets.DOCKERHUB_USERNAME || 'telcochisel' }}
+  DO_REGISTRY_DEFAULT: ${{ secrets.DO_REGISTRY_NAME || secrets.DO_REGISTRY || 'telcochisel' }}
 
 jobs:
   # ─── 1. Build and Publish Base Image ──────────────────────────────────────────
@@ -71,7 +71,7 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Resolve metadata and registry readiness
         id: meta
@@ -87,10 +87,17 @@ jobs:
           CLEAN_VERSION="${VERSION#v}"
           COMMIT_SHA=$(git rev-parse --short HEAD)
 
-          # Target Registry Toggles
-          WANT_GHCR="${{ github.event.inputs.publish_ghcr != 'false' }}"
-          WANT_DH="${{ github.event.inputs.publish_dockerhub != 'false' }}"
-          WANT_DO="${{ github.event.inputs.publish_digitalocean != 'false' }}"
+          # Tag pushes: GHCR only (cheapest default). Hub/DO require an
+          # explicit workflow_dispatch toggle (defaults false).
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            WANT_GHCR="${{ github.event.inputs.publish_ghcr != 'false' }}"
+            WANT_DH="${{ github.event.inputs.publish_dockerhub == 'true' }}"
+            WANT_DO="${{ github.event.inputs.publish_digitalocean == 'true' }}"
+          else
+            WANT_GHCR="true"
+            WANT_DH="false"
+            WANT_DO="false"
+          fi
 
           HAS_GHCR="${WANT_GHCR}"
           HAS_DH="false"
@@ -122,11 +129,11 @@ jobs:
           echo "DigitalOcean Container Registry (${DO_REG}): ${HAS_DO}"
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Log in to GitHub Container Registry (GHCR)
         if: steps.meta.outputs.has_ghcr == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY_GHCR }}
           username: ${{ github.actor }}
@@ -134,14 +141,14 @@ jobs:
 
       - name: Log in to Docker Hub
         if: steps.meta.outputs.has_dockerhub == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME || 'telcosec' }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to DigitalOcean Container Registry (DOCR)
         if: steps.meta.outputs.has_do == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY_DO }}
           username: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN || secrets.DO_TOKEN || secrets.DO_REGISTRY_TOKEN }}
@@ -197,7 +204,7 @@ jobs:
           echo "smoke_tag=${SMOKE_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Build & push telcochisel-base
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/base.Dockerfile
@@ -206,7 +213,7 @@ jobs:
             VERSION=${{ steps.meta.outputs.clean_version }}
           tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha,scope=telcochisel-base
-          cache-to: type=gha,mode=max,scope=telcochisel-base
+          cache-to: type=gha,mode=min,scope=telcochisel-base
 
       - name: Verify telcochisel-base healthcheck
         if: github.event.inputs.run_smoke_tests != 'false' && steps.tags.outputs.smoke_tag != ''
@@ -245,17 +252,19 @@ jobs:
             short_desc: "TelcoSec TelcoChisel Core Network — 4G/5G SA core & RAN emulation & exploitation"
           - image: device-tools
             short_desc: "TelcoSec TelcoChisel Device Tools — Mobile device & baseband flashing & diagnostics"
+          - image: 5ghoul
+            short_desc: "TelcoSec TelcoChisel 5Ghoul — BladeRF-first 5G NR research image"
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3
+        uses: docker/setup-buildx-action@8d2750c68a42422c14e847fe6c8ac0403b4cbd6f # v3
 
       - name: Log in to GitHub Container Registry (GHCR)
         if: needs.base.outputs.has_ghcr == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY_GHCR }}
           username: ${{ github.actor }}
@@ -263,14 +272,14 @@ jobs:
 
       - name: Log in to Docker Hub
         if: needs.base.outputs.has_dockerhub == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME || 'telcosec' }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
       - name: Log in to DigitalOcean Container Registry (DOCR)
         if: needs.base.outputs.has_do == 'true'
-        uses: docker/login-action@v3
+        uses: docker/login-action@c94ce9fb468520275223c153574b00df6fe4bcc9 # v3
         with:
           registry: ${{ env.REGISTRY_DO }}
           username: ${{ secrets.DIGITALOCEAN_ACCESS_TOKEN || secrets.DO_TOKEN || secrets.DO_REGISTRY_TOKEN }}
@@ -326,7 +335,7 @@ jobs:
           echo "smoke_tag=${SMOKE_TAG}" >> "$GITHUB_OUTPUT"
 
       - name: Build & push telcochisel-${{ matrix.image }}
-        uses: docker/build-push-action@v6
+        uses: docker/build-push-action@10e90e3645eae34f1e60eeb005ba3a3d33f178e8 # v6
         with:
           context: .
           file: docker/${{ matrix.image }}.Dockerfile
@@ -336,7 +345,7 @@ jobs:
             VERSION=${{ needs.base.outputs.clean_version }}
           tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha,scope=telcochisel-${{ matrix.image }}
-          cache-to: type=gha,mode=max,scope=telcochisel-${{ matrix.image }}
+          cache-to: type=gha,mode=min,scope=telcochisel-${{ matrix.image }}
 
       - name: Verify telcochisel-${{ matrix.image }} healthcheck
         if: github.event.inputs.run_smoke_tests != 'false' && steps.tags.outputs.smoke_tag != ''

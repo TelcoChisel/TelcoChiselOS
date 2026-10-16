@@ -17,14 +17,36 @@ GIT_QUIET_ARGS=(--depth 1)
 # Prevent git from ever prompting interactively for credentials during automated builds
 export GIT_TERMINAL_PROMPT=0
 
+# _clone_git <url> <dir> [ref] [extra git-args...]
+# If ref is set and does not start with '-', clone that branch/tag (pinned).
+# Falls back to unpinned depth-1 clone if the ref is missing (typo / renamed tag).
+_clone_git() {
+  local url="$1" dir="$2" ref="" 
+  shift 2
+  if [ $# -gt 0 ] && [[ "${1:-}" != -* ]]; then
+    ref="$1"
+    shift
+  fi
+  if [ -n "$ref" ]; then
+    echo "  [clone] $dir @ $ref"
+    if git clone "${GIT_QUIET_ARGS[@]}" --branch "$ref" "$@" "$url" "$dir"; then
+      return 0
+    fi
+    echo "  [clone] WARN: ref '$ref' unavailable — falling back to default branch" >&2
+    rm -rf "$dir"
+  else
+    echo "  [clone] $dir (floating default branch)"
+  fi
+  git clone "${GIT_QUIET_ARGS[@]}" "$@" "$url" "$dir"
+}
+
 clone_if_missing() {
   local url="$1" dir="$2"; shift 2
   if [ -d "$dir" ]; then
     echo "  [clone] $dir already present — skipping"
     return 0
   fi
-  echo "  [clone] $dir"
-  if ! git clone "${GIT_QUIET_ARGS[@]}" "$@" "$url" "$dir"; then
+  if ! _clone_git "$url" "$dir" "$@"; then
     echo "  [clone] FAILED: $url" >&2
     return 1
   fi
@@ -33,6 +55,7 @@ clone_if_missing() {
 # Track in-flight background clones (bash arrays, name -> pid)
 declare -A _BG_CLONE_PIDS 2>/dev/null || true
 
+# clone_bg <url> <dir> [ref] [extra git-args...]
 clone_bg() {
   local url="$1" dir="$2"; shift 2 || true
   if [ -d "$dir" ]; then
@@ -42,7 +65,7 @@ clone_bg() {
   (
     local err_file
     err_file=$(mktemp)
-    if ! git clone "${GIT_QUIET_ARGS[@]}" "$@" "$url" "$dir" >/dev/null 2>"$err_file"; then
+    if ! _clone_git "$url" "$dir" "$@" >/dev/null 2>"$err_file"; then
       echo "  [clone] FAILED: $url" >&2
       if [ -s "$err_file" ]; then
         sed 's/^/    [git] /' "$err_file" >&2

@@ -1,0 +1,9 @@
+# Opt-in override: mount the host Docker socket into core-network.
+# Required only for nested `open5gs-install` / docker-compose-from-container flows.
+# Equivalent to host root from inside the container — do not use on shared hosts.
+#
+#   docker compose -f docker/compose.yaml -f docker/compose.docker-sock.yaml run --rm core-network
+services:
+  core-network:
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock

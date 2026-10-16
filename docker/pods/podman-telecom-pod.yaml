@@ -29,7 +29,7 @@ spec:
   containers:
     # ─── Container 1: 5G Core Network & Signaling ────────────────────────────
     - name: open5gs-core
-      image: ghcr.io/telcosec-tools/telcochisel-core-network:latest
+      image: ghcr.io/telcochisel/telcochisel-core-network:latest
       command:
         - /bin/bash
         - -c
@@ -63,7 +63,7 @@ spec:
 
     # ─── Container 2: Telecom Scanner & Signaling Exploit Suite ───────────────
     - name: telecom-scanner
-      image: ghcr.io/telcosec-tools/telcochisel-base:latest
+      image: ghcr.io/telcochisel/telcochisel-base:latest
       command:
         - /bin/bash
         - -c

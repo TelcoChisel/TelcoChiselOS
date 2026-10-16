@@ -441,12 +441,14 @@ EOF
 
 cat << 'EOF' > "$MNT_TARGET/etc/cloud/cloud.cfg.d/99-telcosec-user.cfg"
 # TelcoSec TelcoChisel VM default provisioning
+# Password-required sudo (not NOPASSWD:ALL) — lab VMs still use the documented
+# telcosec password; this blocks silent privilege escalation from malware/scripts.
 system_info:
   default_user:
     name: telcosec
     gecos: TelcoSec Operator
     groups: [sudo, dialout, plugdev, netdev, wireshark]
-    sudo: ["ALL=(ALL) NOPASSWD:ALL"]
+    sudo: ["ALL=(ALL) ALL"]
     shell: /bin/bash
 EOF
 

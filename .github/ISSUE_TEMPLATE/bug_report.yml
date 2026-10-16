@@ -7,7 +7,7 @@ body:
     attributes:
       value: |
         Thank you for reporting an issue with **TelcoChisel**!
-        Before submitting, please check if your issue is already documented or answered in our [Discussions](https://github.com/TelcoSec-Tools/TelcoChiselOS/discussions) or [Documentation](https://chisel.telcosec.net).
+        Before submitting, please check if your issue is already documented or answered in our [Discussions](https://github.com/TelcoChisel/TelcoChiselOS/discussions) or [Documentation](https://chisel.telcosec.net).
 
   - type: dropdown
     id: edition
@@ -28,7 +28,7 @@ body:
     attributes:
       label: OS Version & Release
       description: What version of TelcoChisel is running?
-      placeholder: "e.g., v3.0.0 (Noble Numbat)"
+      placeholder: "e.g., v2026.2 (Noble Numbat)"
     validations:
       required: true
 

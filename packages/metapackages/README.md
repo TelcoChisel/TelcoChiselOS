@@ -1,6 +1,8 @@
 # TelcoChisel Modular Debian Metapackages
 
-This directory contains the source definitions and automated packaging system for the **10 Official TelcoChisel Debian Metapackages**.
+Canonical source: [TelcoChisel/telcochisel-metapackages](https://github.com/TelcoChisel/telcochisel-metapackages).
+
+This directory is a build-time copy of the packaging definitions for the **10 Official TelcoChisel Debian Metapackages**.
 
 These metapackages enable users and automated CI/CD environments to install specialized functional tiers on minimal Ubuntu 24.04 installations or manage modular updates via `telcosec-pkg`.
 

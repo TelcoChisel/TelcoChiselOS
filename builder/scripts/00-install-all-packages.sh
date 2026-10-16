@@ -203,7 +203,7 @@ if [ "$BUILD_FLAVOR" = "lite" ]; then
       echo "  WARNING: telcochisel-base install failed (non-fatal)"
   fi
 else
-  echo "  Installing Flagship Field Edition packages (all 88 telecom tools & runtimes)..."
+  echo "  Installing Flagship Field Edition packages (all 100 telecom tools & runtimes)..."
   # Install the union of all package arrays (sourced from lib/packages.sh)
   # plus any packages that don't belong to a downstream-script group.
   # shellcheck disable=SC2086
@@ -289,8 +289,21 @@ set -e
 echo "=== Installing Rust toolchain (stable, system-wide) ==="
 export RUSTUP_HOME=/usr/local/rustup
 export CARGO_HOME=/usr/local/cargo
-curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
-  sh -s -- -y --no-modify-path --default-toolchain stable
+# Prefer a version-pinned rustup-init binary; fall back to the official installer
+# script only if the archive CDN is unreachable.
+RUSTUP_VERSION="1.27.1"
+RUSTUP_INIT_URL="https://static.rust-lang.org/rustup/archive/${RUSTUP_VERSION}/x86_64-unknown-linux-gnu/rustup-init"
+if curl --proto '=https' --tlsv1.2 -fsSL "$RUSTUP_INIT_URL" -o /tmp/rustup-init \
+   && [ -s /tmp/rustup-init ]; then
+  chmod +x /tmp/rustup-init
+  /tmp/rustup-init -y --no-modify-path --default-toolchain stable
+  rm -f /tmp/rustup-init
+  echo "  rustup-init ${RUSTUP_VERSION} installed from archive CDN"
+else
+  echo "  WARNING: pinned rustup-init download failed — falling back to sh.rustup.rs" >&2
+  curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | \
+    sh -s -- -y --no-modify-path --default-toolchain stable
+fi
 cat > /etc/profile.d/rust.sh << 'EOF'
 export RUSTUP_HOME=/usr/local/rustup
 export CARGO_HOME=/usr/local/cargo
@@ -328,7 +341,8 @@ fi
 if ! command -v sipp >/dev/null 2>&1; then
   echo "  Building optimized sipp from source with all modules (TLS, SCTP, PCAP, GSL)..."
   mkdir -p /opt/telcosec/src
-  git clone --depth 1 https://github.com/SIPp/sipp /opt/telcosec/src/sipp 2>/dev/null || true
+  git clone --depth 1 --branch v3.7.9 https://github.com/SIPp/sipp /opt/telcosec/src/sipp 2>/dev/null \
+    || git clone --depth 1 https://github.com/SIPp/sipp /opt/telcosec/src/sipp 2>/dev/null || true
   if [ -d /opt/telcosec/src/sipp ]; then
     cmake -S /opt/telcosec/src/sipp -B /opt/telcosec/src/sipp/build \
       -DCMAKE_BUILD_TYPE=Release \

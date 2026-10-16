@@ -1,0 +1,19 @@
+# BladeRF-first 5Ghoul container. Build context is this directory.
+#   docker compose -f compose.yaml run --rm 5ghoul
+#   docker compose -f compose.yaml run --rm 5ghoul 5ghoul-install
+services:
+  5ghoul:
+    image: telcosec/5ghoul:latest
+    build:
+      context: .
+      dockerfile: Dockerfile
+    init: true
+    stdin_open: true
+    tty: true
+    cap_add:
+      - NET_ADMIN
+    devices:
+      - /dev/bus/usb:/dev/bus/usb
+      - /dev/net/tun:/dev/net/tun
+    environment:
+      TELCOSEC_5GHOUL_RADIO: BLADERF

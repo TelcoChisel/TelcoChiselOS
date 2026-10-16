@@ -5,12 +5,15 @@
  *
  * Canonical Source of Truth: data/tools.json
  * Generated targets:
- *   - docs/data/tools.js       (Nuxt 3 documentation portal, ES Module)
+ *   - docs/data/tools.js       (mirror for parity; live site is TelcoChisel/website)
  *   - builder/docs/app.js      (In-ISO offline documentation portal, Vanilla JS)
+ *
+ * The Nuxt portal is https://github.com/TelcoChisel/website — it pulls this
+ * SoT on deploy. Keep docs/data/tools.js in sync so CI can still detect drift.
  *
  * Usage:
  *   node scripts/sync-catalogs.js          # Check for catalog drift across all surfaces
- *   node scripts/sync-catalogs.js --build  # Generate both docs/data/tools.js and builder/docs/app.js from data/tools.json
+ *   node scripts/sync-catalogs.js --build  # Generate docs/data/tools.js and builder/docs/app.js from data/tools.json
  *   node scripts/sync-catalogs.js --sync   # Alias for --build
  */
 

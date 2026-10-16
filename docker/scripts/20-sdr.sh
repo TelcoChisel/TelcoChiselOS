@@ -38,8 +38,19 @@ apt_retry install -y --no-install-recommends \
 rm -rf /var/lib/apt/lists/*
 
 # ─── 2. Miniconda + telcosec-sdr env ────────────────────────────────────────
-echo "Installing Miniconda..."
-wget -q https://repo.anaconda.com/miniconda/Miniconda3-latest-Linux-x86_64.sh -O /tmp/miniconda.sh
+MINICONDA_VER="py312_26.7.1-1"
+MINICONDA_INSTALLER="Miniconda3-${MINICONDA_VER}-Linux-x86_64.sh"
+MINICONDA_URL="https://repo.anaconda.com/miniconda/${MINICONDA_INSTALLER}"
+echo "Installing Miniconda ${MINICONDA_VER}..."
+wget -q -O /tmp/miniconda.sh "$MINICONDA_URL"
+if wget -q -O /tmp/miniconda.sh.sha256 "${MINICONDA_URL}.sha256" 2>/dev/null; then
+  EXPECTED=$(awk '{print $1}' /tmp/miniconda.sh.sha256)
+  ACTUAL=$(sha256sum /tmp/miniconda.sh | awk '{print $1}')
+  if [ -z "$EXPECTED" ] || [ "$EXPECTED" != "$ACTUAL" ]; then
+    echo "ERROR: Miniconda SHA256 mismatch" >&2
+    exit 1
+  fi
+fi
 bash /tmp/miniconda.sh -b -p "$CONDA_ROOT"
 rm /tmp/miniconda.sh
 
@@ -66,10 +77,13 @@ export CMAKE_PREFIX_PATH="$CONDA_PREFIX"
 # ─── 3. Clone SDR source repos in parallel ──────────────────────────────────
 mkdir -p "${TELCOSEC_OPT}/src"
 git_clone_retry --depth 1 https://github.com/pothosware/SoapySDR.git "${TELCOSEC_OPT}/src/SoapySDR" &
-git_clone_retry --depth 1 https://github.com/greatscottgadgets/hackrf.git "${TELCOSEC_OPT}/src/hackrf" &
-git_clone_retry --depth 1 https://github.com/EttusResearch/uhd.git "${TELCOSEC_OPT}/src/uhd" &
+{ git_clone_retry --depth 1 --branch v2026.01.3 https://github.com/greatscottgadgets/hackrf.git "${TELCOSEC_OPT}/src/hackrf" \
+  || git_clone_retry --depth 1 https://github.com/greatscottgadgets/hackrf.git "${TELCOSEC_OPT}/src/hackrf"; } &
+{ git_clone_retry --depth 1 --branch v4.11.0.0 https://github.com/EttusResearch/uhd.git "${TELCOSEC_OPT}/src/uhd" \
+  || git_clone_retry --depth 1 https://github.com/EttusResearch/uhd.git "${TELCOSEC_OPT}/src/uhd"; } &
 git_clone_retry --depth 1 https://github.com/steve-m/kalibrate-rtl.git "${TELCOSEC_OPT}/src/kalibrate-rtl" &
-git_clone_retry --depth 1 https://github.com/myriadrf/LimeSuite.git "${TELCOSEC_OPT}/src/LimeSuite" &
+{ git_clone_retry --depth 1 --branch v23.11.0 https://github.com/myriadrf/LimeSuite.git "${TELCOSEC_OPT}/src/LimeSuite" \
+  || git_clone_retry --depth 1 https://github.com/myriadrf/LimeSuite.git "${TELCOSEC_OPT}/src/LimeSuite"; } &
 wait
 
 _sdr_cmake_make() {

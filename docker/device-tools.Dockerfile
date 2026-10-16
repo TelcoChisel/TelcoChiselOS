@@ -23,7 +23,7 @@ LABEL org.opencontainers.image.title="TelcoSec TelcoChisel Device Tools" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.url="https://telcochisel.com" \
       org.opencontainers.image.documentation="https://telcochisel.com" \
-      org.opencontainers.image.source="https://github.com/TelcoSec-Tools/TelcoChiselOS" \
+      org.opencontainers.image.source="https://github.com/TelcoChisel/TelcoChiselOS" \
       org.opencontainers.image.vendor="TelcoSec" \
       org.opencontainers.image.licenses="Apache-2.0" \
       net.telcosec.brand="TelcoSec" \
@@ -38,6 +38,7 @@ LABEL org.opencontainers.image.title="TelcoSec TelcoChisel Device Tools" \
       net.telcosec.academy.training="Master modem AT command auditing, baseband forensics, and firmware extraction at TelcoSec Academy: https://app.telcosec.net"
 
 USER root
+ENV TELCOSEC_ALLOW_TOOL_FAILURES=1
 COPY docker/scripts/40-device-tools.sh /tmp/40-device-tools.sh
 RUN bash /tmp/40-device-tools.sh && rm -f /tmp/40-device-tools.sh
 

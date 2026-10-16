@@ -1,0 +1,27 @@
+name: Notify website of catalog updates
+
+on:
+  push:
+    branches: ["main"]
+    paths:
+      - 'data/tools.json'
+  workflow_dispatch:
+
+jobs:
+  dispatch:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 5
+    steps:
+      - name: Trigger TelcoChisel/website rebuild
+        env:
+          GH_TOKEN: ${{ secrets.WEBSITE_DISPATCH_TOKEN || secrets.GITHUB_TOKEN }}
+        run: |
+          # GITHUB_TOKEN cannot dispatch to another repo unless this workflow
+          # runs with a PAT/fine-grained token in WEBSITE_DISPATCH_TOKEN that
+          # has contents:write (or actions:write) on TelcoChisel/website.
+          if ! gh api --method POST \
+            -H "Accept: application/vnd.github+json" \
+            /repos/TelcoChisel/website/dispatches \
+            -f event_type=catalog-updated; then
+            echo "::warning::Could not dispatch to TelcoChisel/website. Set WEBSITE_DISPATCH_TOKEN (PAT) on this repo, or rebuild the site manually."
+          fi

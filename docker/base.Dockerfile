@@ -13,6 +13,12 @@
 # left out of this image (GUI desktop, kernel modules, systemd services —
 # those belong to the ISO or to the sdr/core-network/device-tools add-ons).
 # =============================================================================
+# Stage 1: build the Go operator CLI (preferred over the bash launcher).
+FROM golang:1.22-bookworm AS cli-builder
+WORKDIR /src
+COPY packages/telcosec-cli/ ./
+RUN CGO_ENABLED=0 go build -trimpath -ldflags="-s -w" -o /out/telcosec ./cmd/telcosec
+
 FROM ubuntu:24.04
 
 ARG VERSION=2026.2
@@ -22,7 +28,7 @@ LABEL org.opencontainers.image.title="TelcoSec TelcoChisel Base" \
       org.opencontainers.image.version="${VERSION}" \
       org.opencontainers.image.url="https://telcochisel.com" \
       org.opencontainers.image.documentation="https://telcochisel.com" \
-      org.opencontainers.image.source="https://github.com/TelcoSec-Tools/TelcoChiselOS" \
+      org.opencontainers.image.source="https://github.com/TelcoChisel/TelcoChiselOS" \
       org.opencontainers.image.vendor="TelcoSec" \
       org.opencontainers.image.licenses="Apache-2.0" \
       net.telcosec.brand="TelcoSec" \
@@ -55,14 +61,16 @@ RUN (getent passwd ubuntu >/dev/null && userdel -r ubuntu 2>/dev/null || true) \
  && (getent group ubuntu >/dev/null && groupdel ubuntu 2>/dev/null || true) \
  && groupadd -g 1000 telcosec \
  && useradd -u 1000 -g telcosec -m -s /bin/bash telcosec \
- && mkdir -p /opt/telcosec/lib && chown -R telcosec:telcosec /opt/telcosec \
- && mkdir -p /etc/apt/keyrings /etc/apt/sources.list.d \
- && (which curl >/dev/null || (apt-get update -qq && apt-get install -y -qq curl ca-certificates && rm -rf /var/lib/apt/lists/*)) \
- && (curl -fsSL https://meta.telcosec.net/telcosec.gpg -o /etc/apt/keyrings/telcochisel-archive-keyring.asc 2>/dev/null || curl -fsSL https://meta.telcosec.net/public.gpg -o /etc/apt/keyrings/telcochisel-archive-keyring.asc 2>/dev/null || true) \
- && if [ -s /etc/apt/keyrings/telcochisel-archive-keyring.asc ]; then \
-      chmod 0644 /etc/apt/keyrings/telcochisel-archive-keyring.asc; \
-      printf "Types: deb\nURIs: https://meta.telcosec.net\nSuites: noble\nComponents: main\nSigned-By: /etc/apt/keyrings/telcochisel-archive-keyring.asc\n" > /etc/apt/sources.list.d/telcochisel.sources; \
-    fi
+ && mkdir -p /opt/telcosec/lib /usr/local/libexec && chown -R telcosec:telcosec /opt/telcosec \
+ && mkdir -p /etc/apt/keyrings /etc/apt/sources.list.d
+
+# Fingerprint-verify TelcoChisel APT key (same FPR as ISO builder / install script).
+# Best-effort: offline/air-gapped builds skip the repo rather than aborting.
+COPY docker/scripts/install-apt-key.sh /tmp/install-apt-key.sh
+RUN chmod +x /tmp/install-apt-key.sh \
+ && (bash /tmp/install-apt-key.sh || echo "WARNING: TelcoChisel APT key not installed (offline or fingerprint failure)") \
+ && rm -f /tmp/install-apt-key.sh \
+ && rm -rf /var/lib/apt/lists/*
 
 COPY builder/scripts/lib/packages.sh         /opt/telcosec/lib/packages.sh
 COPY builder/scripts/lib/pip-retry.sh        /opt/telcosec/lib/pip-retry.sh
@@ -70,13 +78,19 @@ COPY builder/scripts/lib/pip-constraints.txt /opt/telcosec/lib/pip-constraints.t
 COPY builder/scripts/lib/record-tool.sh      /opt/telcosec/lib/record-tool.sh
 COPY builder/wordlists/                      /opt/telcosec/wordlists/
 COPY docker/scripts/00-container-common.sh   /opt/telcosec/lib/00-container-common.sh
+# Go at libexec; bash wrapper on PATH execs it (same layout as the ISO).
+COPY --from=cli-builder /out/telcosec         /usr/local/libexec/telcosec
 COPY builder/scripts/bin/telcosec            /usr/local/bin/telcosec
+COPY builder/scripts/bin/telcosec            /usr/local/bin/telcosec.bash
 COPY builder/scripts/bin/telcosec-pkg        /usr/local/bin/telcosec-pkg
 COPY builder/scripts/bin/telcosec-academy    /usr/local/bin/telcosec-academy
 COPY builder/scripts/bin/telcosec-prolabs    /usr/local/bin/telcosec-prolabs
 COPY docker/scripts/10-base-tools.sh         /tmp/10-base-tools.sh
 
-RUN chmod +x /usr/local/bin/telcosec* \
+# Container builds treat missing optional tools as non-fatal (ISO still fails hard).
+ENV TELCOSEC_ALLOW_TOOL_FAILURES=1
+RUN chmod +x /usr/local/libexec/telcosec /usr/local/bin/telcosec /usr/local/bin/telcosec.bash /usr/local/bin/telcosec-* \
+ && ln -sf /usr/local/bin/telcosec /usr/local/bin/telcochisel \
  && bash /tmp/10-base-tools.sh \
  && rm -f /tmp/10-base-tools.sh
 

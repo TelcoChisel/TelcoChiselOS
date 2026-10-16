@@ -71,4 +71,4 @@ Authorized telecom security research only. Transmitting over licensed cellular s
 
 - **TelcoSec Academy (Live Labs):** [app.telcosec.net](https://app.telcosec.net)
 - **Official Website:** [telcosec.net](https://telcosec.net)
-- **GitHub Repository:** [TelcoSec-Tools/TelcoChiselOS](https://github.com/TelcoSec-Tools/TelcoChiselOS)
+- **GitHub Repository:** [TelcoChisel/TelcoChiselOS](https://github.com/TelcoChisel/TelcoChiselOS)
