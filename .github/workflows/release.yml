@@ -13,7 +13,7 @@ on:
         default: 'nightly'
         type: choice
         options:
-          - nightly   # build + push to SF nightly/, update rolling pre-release
+          - nightly   # build + push to SF rolling/, update rolling pre-release
           - patch     # bump x.y.Z → x.y.Z+1, create versioned release
           - minor     # bump x.Y.z → x.Y+1.0, create versioned release
           - major     # bump X.y.z → X+1.0.0, create versioned release
@@ -387,7 +387,7 @@ jobs:
 
       # Orientation README at the Files root — someone landing on the SF
       # "Files" page via a bookmark or search result (not the direct-download
-      # link) otherwise sees a bare folder listing (nightly/, v1.0.0/, ...)
+      # link) otherwise sees a bare folder listing (rolling/, v1.0.0/, ...)
       # with no explanation. Refreshes docs/SOURCEFORGE_FILES_README.md directly.
       - name: Upload SourceForge Files-root README
         if: env.SF_SSH_KEY != ''
@@ -416,7 +416,7 @@ jobs:
         run: |
           set -euo pipefail
           SF_ROOT="/home/frs/project/$SF_PROJECT"
-          SF_DIR="$SF_ROOT/nightly"
+          SF_DIR="$SF_ROOT/rolling"
           SF_TMP="$SF_DIR/_upload_tmp"
           SF_TARGET="$SF_USER,$SF_PROJECT@$SF_HOST"
           SF_SSH="ssh -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR"
@@ -425,10 +425,10 @@ jobs:
           # but allows 'mkdir' via sftp. Clean up any stale staging subdir before upload.
           cat > sftp_batch << EOF
           cd $SF_ROOT
-          -mkdir nightly
-          -rm nightly/_upload_tmp/*
-          -rmdir nightly/_upload_tmp
-          -mkdir nightly/_upload_tmp
+          -mkdir rolling
+          -rm rolling/_upload_tmp/*
+          -rmdir rolling/_upload_tmp
+          -mkdir rolling/_upload_tmp
           EOF
           sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_batch "$SF_TARGET"
 
@@ -480,6 +480,7 @@ jobs:
           # Retention: keep only the build just published. Nightly filenames
           # embed the commit SHA, so the renames above never overwrite older
           # builds — without this, every nightly leaves another ~6 GB behind.
+          # rolling/ is the single SF home for nightlies (nightly/ is retired).
           printf 'cd %s\nls -1\n' "$SF_DIR" > sftp_ls
           STALE=$(sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_ls "$SF_TARGET" \
             | grep -v '^sftp>' | sed 's|.*/||' \
@@ -489,7 +490,7 @@ jobs:
             sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_prune "$SF_TARGET"
             echo "✓ Pruned stale nightly files:"; printf '  %s\n' $STALE
           fi
-          echo "✓ SF nightly → https://sourceforge.net/projects/$SF_PROJECT/files/nightly/"
+          echo "✓ SF rolling → https://sourceforge.net/projects/$SF_PROJECT/files/rolling/"
 
       - name: Deploy to SourceForge — Versioned Release
         if: env.SF_SSH_KEY != '' && steps.version.outputs.is_nightly == 'false'
@@ -613,7 +614,7 @@ jobs:
           | **SHA-256** | \`${SHA256}\` |
 
           ### ⬇ Download (single file — no reassembly needed)
-          **[SourceForge →](https://sourceforge.net/projects/telcochisel/files/nightly/)**
+          **[SourceForge →](https://sourceforge.net/projects/telcochisel/files/rolling/)**
           Direct download, no size limit, resumable.
 
           ### Download from GitHub (split parts)

@@ -91,6 +91,8 @@ jobs:
 
       - name: Acquire Source ISO
         id: iso
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
           TARGET_VER="${{ steps.version.outputs.version }}"
           ISO_TARGET="TelcoChisel-${TARGET_VER}-amd64.iso"
@@ -102,13 +104,18 @@ jobs:
           else
             echo "[*] Fetching release ISO for version ${TARGET_VER}..."
             SF_VERSION_URL="https://downloads.sourceforge.net/project/${SF_PROJECT}/v${TARGET_VER}/${ISO_TARGET}"
-            SF_NIGHTLY_URL="https://downloads.sourceforge.net/project/${SF_PROJECT}/nightly/TelcoChisel-live.iso"
+            # Nightlies live in SF rolling/ under a SHA-stamped name; resolve it
+            # from the matching "rolling" GitHub pre-release.
+            ROLLING_ISO=$(gh release view rolling --json assets \
+              -q '.assets[].name | select(endswith(".iso.sha256"))' 2>/dev/null \
+              | sed 's/\.sha256$//' | head -1 || true)
+            SF_ROLLING_URL="https://downloads.sourceforge.net/project/${SF_PROJECT}/rolling/${ROLLING_ISO:-none.iso}"
 
             echo "Attempting download from SourceForge versioned release: $SF_VERSION_URL"
             if curl -fLC - --retry 3 --retry-delay 5 "$SF_VERSION_URL" -o "$ISO_TARGET"; then
               echo "✓ Acquired $ISO_TARGET from SourceForge versioned release"
-            elif curl -fLC - --retry 3 --retry-delay 5 "$SF_NIGHTLY_URL" -o "$ISO_TARGET"; then
-              echo "✓ Acquired $ISO_TARGET from SourceForge nightly"
+            elif [ -n "$ROLLING_ISO" ] && curl -fLC - --retry 3 --retry-delay 5 "$SF_ROLLING_URL" -o "$ISO_TARGET"; then
+              echo "✓ Acquired $ISO_TARGET from SourceForge rolling ($ROLLING_ISO)"
             else
               echo "[-] SourceForge download unavailable, falling back to GitHub Releases..."
               if gh release download "v${TARGET_VER}" --pattern "${ISO_TARGET}.part-*" --pattern "${ISO_TARGET}.sha256" --dir . 2>/dev/null; then

@@ -25,7 +25,7 @@ The canonical release version is tracked in the root [VERSION](file:///m:/TelcoC
 | Channel | Cadence | Artifact Target | Target Audience |
 | :--- | :--- | :--- | :--- |
 | **Stable (`vYYYY.R`)** | Quarterly Milestones | GitHub Releases + SourceForge (`/TelcoChisel/v2026.1/`) | Production field researchers, lab auditors, and enterprise telecom security teams. |
-| **Nightly Rolling** | Automated / Triggered | GitHub Releases ([`rolling`](https://github.com/TelcoSec-Tools/TelcoChiselOS/releases/tag/rolling)) + SourceForge (`/TelcoChisel/nightly/`) | Core contributors, CI regression testing, and bleeding-edge protocol validation. |
+| **Nightly Rolling** | Automated / Triggered | GitHub Releases ([`rolling`](https://github.com/TelcoSec-Tools/TelcoChiselOS/releases/tag/rolling)) + SourceForge (`/telcochisel/rolling/`) | Core contributors, CI regression testing, and bleeding-edge protocol validation. |
 
 ---
 
