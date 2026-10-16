@@ -224,7 +224,7 @@ jobs:
 
       - name: Sync Docker Hub Description for base
         if: steps.meta.outputs.has_dockerhub == 'true' && github.event.inputs.update_descriptions != 'false'
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         continue-on-error: true
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME || 'telcosec' }}
@@ -356,7 +356,7 @@ jobs:
 
       - name: Sync Docker Hub Description for ${{ matrix.image }}
         if: needs.base.outputs.has_dockerhub == 'true' && github.event.inputs.update_descriptions != 'false'
-        uses: peter-evans/dockerhub-description@v4
+        uses: peter-evans/dockerhub-description@v5
         continue-on-error: true
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME || 'telcosec' }}
