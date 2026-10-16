@@ -25,6 +25,11 @@ on:
         options:
           - full      # Flagship Field Edition (~5.0 GB, all 100 tools)
           - lite      # Modular Lite Edition (~1.8 GB, base + telcosec-pkg)
+      allow_tool_failures:
+        description: 'Ship even if some tool builds fail (TELCOSEC_ALLOW_TOOL_FAILURES)'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: release
@@ -149,7 +154,18 @@ jobs:
           echo "is_nightly=$IS_NIGHTLY"   >> "$GITHUB_OUTPUT"
           echo "date=$(date -u +%Y-%m-%d)" >> "$GITHUB_OUTPUT"
           echo "iso_name=$ISO_NAME"       >> "$GITHUB_OUTPUT"
-          echo "Resolved: version=$VERSION, clean_version=$CLEAN_VERSION, flavor=$FLAVOR (nightly=$IS_NIGHTLY, iso=$ISO_NAME)"
+          # Allow shipping with failed tool builds when explicitly requested via
+          # dispatch, OR when a tag push re-cuts the version currently pending in
+          # the VERSION file (deliberate re-release of a known-incomplete build).
+          ALLOW_TOOL_FAILURES=false
+          if [ "${{ inputs.allow_tool_failures }}" = "true" ]; then
+            ALLOW_TOOL_FAILURES=true
+          elif [[ "$GITHUB_REF" == refs/tags/v* ]] && [ -f VERSION ] \
+               && [ "$CLEAN_VERSION" = "$(head -n1 VERSION | tr -d '[:space:]')" ]; then
+            ALLOW_TOOL_FAILURES=true
+          fi
+          echo "allow_tool_failures=$ALLOW_TOOL_FAILURES" >> "$GITHUB_OUTPUT"
+          echo "Resolved: version=$VERSION, clean_version=$CLEAN_VERSION, flavor=$FLAVOR (nightly=$IS_NIGHTLY, iso=$ISO_NAME, allow_tool_failures=$ALLOW_TOOL_FAILURES)"
 
       - name: Set ISO Environment Name
         run: |
@@ -248,6 +264,7 @@ jobs:
           SQUASHFS_LEVEL: "3"
           ISO_VERSION: ${{ steps.version.outputs.version }}
           BUILD_FLAVOR: ${{ steps.version.outputs.flavor }}
+          TELCOSEC_ALLOW_TOOL_FAILURES: ${{ steps.version.outputs.allow_tool_failures == 'true' && '1' || '0' }}
         run: |
           sudo -E bash build-iso.sh --version="${{ steps.version.outputs.version }}" --flavor="${{ steps.version.outputs.flavor }}"
           sudo chown -R "$(id -u):$(id -g)" .
