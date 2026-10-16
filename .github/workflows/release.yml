@@ -50,7 +50,33 @@ env:
   SF_API_KEY: ${{ secrets.SF_API_KEY }}
 
 jobs:
+  # Weekly cron: skip the whole build when main hasn't moved since the last
+  # nightly (the "rolling" tag marks the commit it was built from) — avoids
+  # rebuilding and re-uploading an identical ~6 GB ISO every week.
+  changes:
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    outputs:
+      build: ${{ steps.check.outputs.build }}
+    steps:
+      - id: check
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BUILD=true
+          if [ "${{ github.event_name }}" = "schedule" ]; then
+            LAST=$(gh api "repos/${{ github.repository }}/git/ref/tags/rolling" -q .object.sha 2>/dev/null || true)
+            if [ "$LAST" = "${{ github.sha }}" ]; then
+              BUILD=false
+              echo "::notice::main unchanged since last nightly (${LAST:0:7}) — skipping build"
+            fi
+          fi
+          echo "build=$BUILD" >> "$GITHUB_OUTPUT"
+
   build:
+    needs: changes
+    if: needs.changes.outputs.build == 'true'
     runs-on: ubuntu-24.04
     timeout-minutes: 240
     permissions:
@@ -400,7 +426,8 @@ jobs:
           cat > sftp_batch << EOF
           cd $SF_ROOT
           -mkdir nightly
-          -rm -r nightly/_upload_tmp
+          -rm nightly/_upload_tmp/*
+          -rmdir nightly/_upload_tmp
           -mkdir nightly/_upload_tmp
           EOF
           sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_batch "$SF_TARGET"
@@ -408,16 +435,13 @@ jobs:
           # Upload into a private staging subdir first — a network blip or
           # runner timeout mid-transfer never touches the public path, so
           # nobody can download a partial/corrupt ISO mid-upload.
-          # nullglob: if TelcoChisel-live.iso* expands to nothing (the hardlink
-          # at build time silently failed via || true), collect zero companions
-          # instead of passing the literal glob string to rsync which would fail.
-          shopt -s nullglob
-          LIVE_COMPANIONS=(TelcoChisel-live.iso*)
-          shopt -u nullglob
+          # The TelcoChisel-live.iso compatibility copy is deliberately NOT
+          # uploaded: SF stores it as a second full ~6 GB file (hardlinks don't
+          # survive rsync), and "latest" is served by the pinned Default Download.
           rsync -avP --partial \
             -e "$SF_SSH" \
             "$ISO" "${ISO}.sha256" "${ISO}.md5" "${ISO}.build-info.json" \
-            "${LIVE_COMPANIONS[@]}" "README.md" \
+            "README.md" \
             "$SF_TARGET:$SF_TMP/"
 
           # Publish: back up whatever's currently public (non-fatal — nothing
@@ -439,9 +463,6 @@ jobs:
           rename _upload_tmp/${ISO}.sha256 ${ISO}.sha256
           rename _upload_tmp/${ISO}.md5 ${ISO}.md5
           rename _upload_tmp/${ISO}.build-info.json ${ISO}.build-info.json
-          -rename _upload_tmp/TelcoChisel-live.iso TelcoChisel-live.iso
-          -rename _upload_tmp/TelcoChisel-live.iso.sha256 TelcoChisel-live.iso.sha256
-          -rename _upload_tmp/TelcoChisel-live.iso.md5 TelcoChisel-live.iso.md5
           rename _upload_tmp/README.md README.md
           -rm $ISO.old
           -rm ${ISO}.sha256.old
@@ -451,9 +472,23 @@ jobs:
           -rm TelcoChisel-live.iso.sha256.old
           -rm TelcoChisel-live.iso.md5.old
           -rm README.md.old
+          -rm _upload_tmp/*
           -rmdir _upload_tmp
           SFTPEOF
           sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_publish "$SF_TARGET"
+
+          # Retention: keep only the build just published. Nightly filenames
+          # embed the commit SHA, so the renames above never overwrite older
+          # builds — without this, every nightly leaves another ~6 GB behind.
+          printf 'cd %s\nls -1\n' "$SF_DIR" > sftp_ls
+          STALE=$(sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_ls "$SF_TARGET" \
+            | grep -v '^sftp>' | sed 's|.*/||' \
+            | grep -E '^TelcoChisel-.*\.iso' | grep -vF "$ISO" || true)
+          if [ -n "$STALE" ]; then
+            { echo "cd $SF_DIR"; printf -- '-rm %s\n' $STALE; } > sftp_prune
+            sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_prune "$SF_TARGET"
+            echo "✓ Pruned stale nightly files:"; printf '  %s\n' $STALE
+          fi
           echo "✓ SF nightly → https://sourceforge.net/projects/$SF_PROJECT/files/nightly/"
 
       - name: Deploy to SourceForge — Versioned Release
@@ -474,7 +509,8 @@ jobs:
           cat > sftp_batch << EOF
           cd $SF_ROOT
           -mkdir $VERSION
-          -rm -r $VERSION/_upload_tmp
+          -rm $VERSION/_upload_tmp/*
+          -rmdir $VERSION/_upload_tmp
           -mkdir $VERSION/_upload_tmp
           EOF
           sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_batch "$SF_TARGET"
@@ -482,16 +518,13 @@ jobs:
           # Upload into a private staging subdir first — a network blip or
           # runner timeout mid-transfer never touches the public path, so
           # nobody can download a partial/corrupt ISO mid-upload.
-          # nullglob: if TelcoChisel-live.iso* expands to nothing (the hardlink
-          # at build time silently failed via || true), collect zero companions
-          # instead of passing the literal glob string to rsync which would fail.
-          shopt -s nullglob
-          LIVE_COMPANIONS=(TelcoChisel-live.iso*)
-          shopt -u nullglob
+          # The TelcoChisel-live.iso compatibility copy is deliberately NOT
+          # uploaded: SF stores it as a second full ~6 GB file (hardlinks don't
+          # survive rsync), and "latest" is served by the pinned Default Download.
           rsync -avP --partial \
             -e "$SF_SSH" \
             "$ISO" "${ISO}.sha256" "${ISO}.md5" "${ISO}.build-info.json" \
-            "${LIVE_COMPANIONS[@]}" "README.md" \
+            "README.md" \
             "$SF_TARGET:$SF_TMP/"
 
           # Publish: back up whatever's currently public (non-fatal — nothing
@@ -511,9 +544,6 @@ jobs:
           rename _upload_tmp/${ISO}.sha256 ${ISO}.sha256
           rename _upload_tmp/${ISO}.md5 ${ISO}.md5
           rename _upload_tmp/${ISO}.build-info.json ${ISO}.build-info.json
-          -rename _upload_tmp/TelcoChisel-live.iso TelcoChisel-live.iso
-          -rename _upload_tmp/TelcoChisel-live.iso.sha256 TelcoChisel-live.iso.sha256
-          -rename _upload_tmp/TelcoChisel-live.iso.md5 TelcoChisel-live.iso.md5
           rename _upload_tmp/README.md README.md
           -rm $ISO.old
           -rm ${ISO}.sha256.old
@@ -523,6 +553,7 @@ jobs:
           -rm TelcoChisel-live.iso.sha256.old
           -rm TelcoChisel-live.iso.md5.old
           -rm README.md.old
+          -rm _upload_tmp/*
           -rmdir _upload_tmp
           SFTPEOF
           sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_publish "$SF_TARGET"
