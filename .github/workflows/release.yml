@@ -430,10 +430,17 @@ jobs:
           EOF
           sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_root_batch "$SF_TARGET" || true
 
-          rsync -av -e "$SF_SSH" \
-            docs/SOURCEFORGE_FILES_README.md \
-            "$SF_TARGET:$SF_ROOT/README.md"
-          echo "✓ SF root README → https://sourceforge.net/projects/$SF_PROJECT/files/"
+          # The Files-root landing page is cosmetic — never let a missing or
+          # failed README upload abort the actual ISO publish below.
+          if [ -f docs/SOURCEFORGE_FILES_README.md ]; then
+            rsync -av -e "$SF_SSH" \
+              docs/SOURCEFORGE_FILES_README.md \
+              "$SF_TARGET:$SF_ROOT/README.md" \
+              && echo "✓ SF root README → https://sourceforge.net/projects/$SF_PROJECT/files/" \
+              || echo "::warning::SF root README upload failed (non-fatal)"
+          else
+            echo "::warning::docs/SOURCEFORGE_FILES_README.md missing — skipping Files-root README"
+          fi
 
       - name: Deploy to SourceForge — Nightly
         if: env.HAS_SF_KEY == 'true' && steps.version.outputs.is_nightly == 'true'
