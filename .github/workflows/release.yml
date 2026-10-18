@@ -770,6 +770,14 @@ jobs:
           \`\`\`
 
           > **Live boot credentials:** \`telcosec:telcosec\`
+
+          ---
+
+          ### 🎓 Go further with TelcoSec Academy
+          Booted the ISO? Turn it into skills. [TelcoSec Academy](https://app.telcosec.net?utm_source=github&utm_medium=release&utm_campaign=telcochisel-rolling) has guided, hands-on labs and CTF testbeds for 5G SA core, SDR, baseband and SIM security — built to run on exactly this image.
+
+          - 💬 Join the community: [Discord](https://discord.gg/RykzXTQFXF)
+          - ⭐ Found it useful? [Leave a quick review on SourceForge](https://sourceforge.net/projects/telcochisel/reviews/new).
           EOF
           )
           # Manage the "rolling" tag via the REST API instead of git-push so
@@ -842,6 +850,14 @@ jobs:
             ```
 
             > **Live boot credentials:** `telcosec:telcosec`
+
+            ---
+
+            ### 🎓 Go further with TelcoSec Academy
+            Booted the ISO? Turn it into skills. **[TelcoSec Academy](https://app.telcosec.net?utm_source=github&utm_medium=release&utm_campaign=telcochisel)** has guided, hands-on labs and CTF testbeds for 5G SA core, SDR, baseband and SIM security — built to run on exactly this image.
+
+            - 💬 Join the community: **[Discord](https://discord.gg/RykzXTQFXF)**
+            - ⭐ Found it useful? **[Leave a quick review on SourceForge](https://sourceforge.net/projects/telcochisel/reviews/new)** — it genuinely helps others find the project.
           files: |
             ${{ env.ISO }}.part-*
             ${{ env.ISO }}.sha256
