@@ -1840,6 +1840,17 @@ echo ""
 EOF
 chmod +x /etc/update-motd.d/05-telcosec-logo
 
+# MOTD promo fragment — nudge users toward the guided labs and a review. Shown
+# on every login shell (SSH + terminal). Kept terse so it never buries the logo.
+cat << 'EOF' > /etc/update-motd.d/06-telcosec-academy
+#!/bin/sh
+echo " 🎓  Level up: guided 5G/SDR/baseband labs & CTFs — https://app.telcosec.net"
+echo " 📖  Docs: https://telcochisel.com     💬  Discord: https://discord.gg/RykzXTQFXF"
+echo " ⭐  Useful? Rate TelcoChisel: https://sourceforge.net/projects/telcochisel/reviews/new"
+echo ""
+EOF
+chmod +x /etc/update-motd.d/06-telcosec-academy
+
 # 3. Custom Rich Bash Prompt (Optimized, Simple, Zero-Lag, Single-Line Style)
 echo "Configuring Global Bash Prompt..."
 cat << 'PROMPTEOF' > /etc/profile.d/telcosec_prompt.sh
