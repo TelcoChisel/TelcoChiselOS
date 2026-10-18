@@ -193,6 +193,9 @@ PKGS_ADVANCED=(
   tftpd-hpa tftp-hpa isc-dhcp-server yersinia ettercap-text-only
   # VoIP extras (not covered by PKGS_TOOLS)
   ppp wvdial
+  # Sun RPC headers (rpc/types.h) — glibc 2.39 on Ubuntu 24.04 dropped them;
+  # voiphopper (and other legacy telecom C) needs libtirpc.
+  libtirpc-dev
   # SNMP / BSS management
   snmp snmp-mibs-downloader snmpd libsnmp-dev
   # Calamares installer & Unpack/Partitioning Tools

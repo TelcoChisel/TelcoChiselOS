@@ -634,19 +634,19 @@ if [ ! -d "${TELCOSEC_OPT}/voiphopper" ]; then
 fi
 if [ -d "${TELCOSEC_OPT}/voiphopper" ]; then
   cd "${TELCOSEC_OPT}/voiphopper"
-  # voiphopper ships autotools, not a single-file compile. Prefer the standard
-  # ./configure && make; fall back to a direct gcc of src/ if autotools is
-  # absent. (The previous `gcc voiphopper.c` failed — the source lives under
-  # src/ and needs the generated config.h from configure.)
+  # voiphopper ships Debian-packaged autotools with two Ubuntu-24.04 pitfalls:
+  #  1. maintainer-mode re-bootstraps via a hardcoded /usr/src/.../missing path
+  #     that does not exist here -> `make` dies with Error 127. Disable it.
+  #  2. it #includes <rpc/types.h>, which glibc 2.39 removed; the headers now
+  #     live in libtirpc (-I/usr/include/tirpc, -ltirpc). See PKGS_ADVANCED.
+  chmod +x ./configure 2>/dev/null || true
   if [ -x ./configure ]; then
-    ./configure >/dev/null 2>&1 && nice -n 10 make -j"$(get_build_procs)" >/dev/null 2>&1 || true
+    ./configure --disable-maintainer-mode \
+      CPPFLAGS="-I/usr/include/tirpc -I$(pwd)/src" \
+      CFLAGS="-w" LIBS="-ltirpc -lpcap" >/dev/null 2>&1 || true
+    nice -n 10 make -j"$(get_build_procs)" >/dev/null 2>&1 || true
   fi
   VH_BIN=$(find . -maxdepth 2 -type f -name voiphopper -perm -u+x 2>/dev/null | head -1)
-  if [ -z "$VH_BIN" ]; then
-    # last-ditch direct compile of the primary source, wherever it lives
-    VH_SRC=$(find . -maxdepth 2 -name 'voiphopper.c' 2>/dev/null | head -1)
-    [ -n "$VH_SRC" ] && gcc -O2 -Wall "$VH_SRC" -o voiphopper -lpcap 2>/dev/null && VH_BIN=./voiphopper || true
-  fi
   if [ -n "$VH_BIN" ] && [ -f "$VH_BIN" ]; then
     ln -sf "${TELCOSEC_OPT}/voiphopper/${VH_BIN#./}" /usr/local/bin/voiphopper
   else
