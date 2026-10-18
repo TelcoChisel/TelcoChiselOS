@@ -2,7 +2,7 @@
 # TelcoChisel Hermetic ISO Build Container
 # Ubuntu 24.04 LTS Noble Numbat based environment for building TelcoChisel Live ISOs
 
-FROM ubuntu:24.04
+FROM ubuntu:25.10
 
 LABEL org.opencontainers.image.title="TelcoChisel ISO Builder" \
       org.opencontainers.image.description="Hermetic, reproducible Live ISO build environment for TelcoChiselOS" \
