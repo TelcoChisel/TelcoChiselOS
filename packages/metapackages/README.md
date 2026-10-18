@@ -21,7 +21,7 @@ These metapackages enable users and automated CI/CD environments to install spec
 | **`telcochisel-tools-sim`** | `sim` / `smartcard` | SIM & Smart Card Security | pySim-shell, Osmocom SIMtrace 2, lpac eSIM, SIMurai, SIMtester, pcsc-tools, OpenSC |
 | **`telcochisel-tools-pstn-adsl`** | `wireline` / `voip` | Wireline, VoIP & Broadband | mausezahn, yersinia, SIPp, sipsak, ettercap, DOCSIS tools |
 | **`telcochisel-tools-ue`** | `ue` / `modem` | Mobile UE & Baseband | UERANSIM UE, SCAT, QCSuper, FirmWire baseband fuzzer, MTKClient, EDL 9008 |
-| **`telcochisel-meta-full`** | `full` / `complete` | Complete Ecosystem Umbrella | Installs all 100 specialized telecom security instruments across all 11 domains |
+| **`telcochisel-meta-full`** | `full` / `complete` | Complete Ecosystem Umbrella | Installs all 100 specialized telecom security instruments across all 10 domains |
 
 ---
 

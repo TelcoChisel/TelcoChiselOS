@@ -43,7 +43,7 @@ cat << 'EOF' > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xsettings.xml
   </property>
   <property name="Gtk" type="empty">
     <property name="FontName" type="string" value="Ubuntu 10"/>
-    <property name="MonospaceFontName" type="string" value="IBM Plex Mono 11"/>
+    <property name="MonospaceFontName" type="string" value="Ubuntu Mono 12"/>
     <property name="MenuPopupDelay" type="int" value="0"/>
     <property name="ToolbarStyle" type="string" value="icons"/>
     <property name="ButtonImages" type="bool" value="true"/>
@@ -57,7 +57,7 @@ cat << 'EOF' > /etc/skel/.config/gtk-3.0/settings.ini
 gtk-theme-name = Yaru-bark-dark
 gtk-icon-theme-name = Papirus-Dark
 gtk-font-name = Ubuntu 10
-gtk-monospace-font-name = IBM Plex Mono 11
+gtk-monospace-font-name = Ubuntu Mono 12
 gtk-menu-popup-delay = 0
 gtk-enable-animations = 1
 gtk-application-prefer-dark-theme = 1
@@ -512,7 +512,7 @@ statusbar {
    colour doesn't interfere with the span overrides.                        */
 .xfce4-panel label {
   color: #8b949e;
-  font-family: "IBM Plex Mono", monospace;
+  font-family: "Ubuntu Mono", monospace;
   font-size: 9pt;
 }
 GTKEOF
@@ -802,21 +802,21 @@ cat << 'EOF' > /etc/xdg/xfce4/xfconf/xfce-perchannel-xml/xfce4-panel.xml
       <property name="command" type="string" value="/usr/local/bin/telcosec-genmon-sdr"/>
       <property name="use-label" type="bool" value="false"/>
       <property name="update-period" type="uint" value="3"/>
-      <property name="font" type="string" value="IBM Plex Mono Bold 9"/>
+      <property name="font" type="string" value="Fira Code Bold 9"/>
     </property>
     <!-- Genmon 19: 5G Core and Cellular Stack Status -->
     <property name="plugin-19" type="string" value="genmon">
       <property name="command" type="string" value="/usr/local/bin/telcosec-genmon-core"/>
       <property name="use-label" type="bool" value="false"/>
       <property name="update-period" type="uint" value="3"/>
-      <property name="font" type="string" value="IBM Plex Mono Bold 9"/>
+      <property name="font" type="string" value="Fira Code Bold 9"/>
     </property>
     <!-- Genmon 20: VPN / Tunnel / ProLabs Network Status -->
     <property name="plugin-20" type="string" value="genmon">
       <property name="command" type="string" value="/usr/local/bin/telcosec-genmon-net"/>
       <property name="use-label" type="bool" value="false"/>
       <property name="update-period" type="uint" value="3"/>
-      <property name="font" type="string" value="IBM Plex Mono Bold 9"/>
+      <property name="font" type="string" value="Fira Code Bold 9"/>
     </property>
     <!-- Live Telecom Telemetry: right separator -->
     <property name="plugin-22" type="string" value="separator">
@@ -1303,7 +1303,7 @@ cat << 'EOF' > /etc/skel/.config/terminator/config
   title_inactive_fg_color = "#8b949e"
   title_inactive_bg_color = "#0e121a"
   title_use_system_font = False
-  title_font = "IBM Plex Mono Bold 10"
+  title_font = "Ubuntu Mono Bold 11"
   focus = "mouse"
   handle_size = 2
   window_state = "maximise"
@@ -1323,7 +1323,7 @@ cat << 'EOF' > /etc/skel/.config/terminator/config
     cursor_color_default = False
     cursor_shape = "block"
     cursor_blink = True
-    font = "IBM Plex Mono 12"
+    font = "Ubuntu Mono 13"
     use_system_font = False
     show_titlebar = True
     scrollbar_position = "hidden"
@@ -1411,7 +1411,7 @@ conky.config = {
     draw_shades = false,
 
     use_xft = true,
-    font = 'IBM Plex Mono:size=9',
+    font = 'Fira Code:size=9',
     xftalpha = 1.0,
     uppercase = false,
 
@@ -1425,19 +1425,19 @@ conky.config = {
 };
 
 conky.text = [[
-${color1}${font IBM Plex Mono:bold:size=10}📡 TELCOCHISEL OS — TACTICAL HUD${font}${alignr}${color3}v2026.2
+${color1}${font Fira Code:bold:size=10}📡 TELCOCHISEL OS — TACTICAL HUD${font}${alignr}${color3}v2026.2
 ${color0}${hr 1}
 ${color3}Host:${color} ${nodename}${alignr}${color3}Uptime:${color} ${uptime_short}
 ${color3}Kernel:${color} ${kernel} ${alignr}${color1}[Low-Latency]${color}
 ${color3}UTC Time:${color} ${utime %H:%M:%S}${alignr}${color3}Local:${color} ${time %H:%M}
 
-${color1}${font IBM Plex Mono:bold:size=9}📻 RF HARDWARE & TRANSCEIVERS${font}${color}
+${color1}${font Fira Code:bold:size=9}📻 RF HARDWARE & TRANSCEIVERS${font}${color}
 ${color0}${hr 1}
 ${color3}SDR Probes:${color}
 ${color}${execi 3 /usr/local/bin/telcosec-hud-sdr}${color}
 ${color3}USBFS Buffer:${color} ${execi 5 cat /sys/module/usbcore/parameters/usbfs_memory_mb 2>/dev/null || echo "N/A"} MB ${alignr}${color1}[1000MB Target]${color}
 
-${color1}${font IBM Plex Mono:bold:size=9}⚡ CELLULAR & NETWORK INTERFACES${font}${color}
+${color1}${font Fira Code:bold:size=9}⚡ CELLULAR & NETWORK INTERFACES${font}${color}
 ${color0}${hr 1}
 ${if_existing /sys/class/net/ogstun}${color2}ogstun (5G Core):${color} ${addr ogstun}${alignr}${color1}[UP]${color}${else}${color3}ogstun (5G Core): [Standby]${color}${endif}
 ${if_existing /sys/class/net/mon0}${color2}mon0 (GSMTAP):${color} Mon Mode Active${alignr}${color1}[SNIFF]${color}${endif}
@@ -1447,14 +1447,14 @@ ${if_existing /sys/class/net/tun0}${color2}tun0 (OpenVPN):${color} ${addr tun0}$
 ${color3}Primary Net:${color} ${alignr}${color}${addr eth0}${color}${addr ens160}${color}${addr wlan0}
 ${color3}Bandwidth:${color} Down: ${color1}${downspeedf eth0}${downspeedf ens160}${downspeedf wlan0} KB/s${color} | Up: ${color2}${upspeedf eth0}${upspeedf ens160}${upspeedf wlan0} KB/s${color}
 
-${color1}${font IBM Plex Mono:bold:size=9}🧠 SYSTEM & ZERO-DROP ENGINE${font}${color}
+${color1}${font Fira Code:bold:size=9}🧠 SYSTEM & ZERO-DROP ENGINE${font}${color}
 ${color0}${hr 1}
 ${color3}CPU Load:${color} ${cpu cpu0}% ${color1}${cpubar 6,140 cpu0}${alignr}${color}${freq_g} GHz
 ${color3}Memory:${color}   ${mem} / ${memmax} (${memperc}%)
 ${color1}${membar 6}${color}
 ${color3}Root Disk:${color} ${fs_used /} / ${fs_size /} (${fs_used_perc /}%) ${alignr}${color1}[SSD Trim]${color}
 
-${color2}${font IBM Plex Mono:bold:size=9}🎯 TELECOM FREQUENCY CHEATSHEET${font}${color}
+${color2}${font Fira Code:bold:size=9}🎯 TELECOM FREQUENCY CHEATSHEET${font}${color}
 ${color0}${hr 1}
 ${color4}GSM-900${color}:  UL 890-915 MHz   | DL 935-960 MHz
 ${color4}DCS-1800${color}: UL 1710-1785 MHz | DL 1805-1880 MHz
@@ -1462,7 +1462,7 @@ ${color4}LTE B3${color}:   UL 1710-1785 MHz | DL 1805-1880 MHz
 ${color4}LTE B20${color}:  UL 832-862 MHz   | DL 791-821 MHz
 ${color4}5G n78${color}:   3300 - 3800 MHz (C-Band TDD)
 
-${color1}${font IBM Plex Mono:bold:size=9}⌨️ TACTICAL OPERATOR SHORTCUTS${font}${color}
+${color1}${font Fira Code:bold:size=9}⌨️ TACTICAL OPERATOR SHORTCUTS${font}${color}
 ${color0}${hr 1}
 ${color4}Super+Return${color}: Terminator     ${color4}Super+Shift+W${color}: Wireshark
 ${color4}Super+Shift+T${color}: 4-Pane Matrix ${color4}Super+Shift+G${color}: Gqrx SDR
@@ -2427,7 +2427,7 @@ cat << 'EOF' > /etc/skel/.config/i3/config
 # TelcoChisel i3 Configuration — Telecom Red Team Operational Mode (RFS Style)
 set $mod Mod4
 
-font pango:IBM Plex Mono, Ubuntu 11
+font pango:Fira Code, Ubuntu Mono 11
 
 # Cyberpunk & Dark Tactical Theme
 # class                 border  bground text    indicator child_border
@@ -2641,7 +2641,7 @@ EOF
 cat << 'EOF' > /etc/skel/.config/rofi/config.rasi
 configuration {
     modi: "drun,run,window";
-    font: "IBM Plex Mono Medium 12";
+    font: "Fira Code Medium 12";
     show-icons: true;
     display-drun: "📡 TelcoSec [100 Tools]";
     display-run: "⚡ Exec";
@@ -2685,7 +2685,7 @@ inputbar {
 
 prompt {
     text-color: @accent-cyan;
-    font: "IBM Plex Mono Bold 12";
+    font: "Fira Code Bold 12";
     margin: 0 10px 0 0;
 }
 

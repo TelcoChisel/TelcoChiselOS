@@ -5,8 +5,8 @@ Maintainer: TelcoChisel Engineering Team <ops@telcochisel.com>
 Build-Depends: debhelper-compat (= 13)
 Standards-Version: 4.6.2
 Homepage: https://telcochisel.com
-Vcs-Git: https://github.com/TelcoSec-Tools/TelcoChiselOS.git
-Vcs-Browser: https://github.com/TelcoSec-Tools/TelcoChiselOS
+Vcs-Git: https://github.com/TelcoChisel/TelcoChiselOS.git
+Vcs-Browser: https://github.com/TelcoChisel/TelcoChiselOS
 
 Package: telcochisel-base
 Architecture: all
@@ -17,6 +17,8 @@ Depends: ${misc:Depends},
  zsh,
  zsh-autosuggestions,
  zsh-syntax-highlighting,
+ fonts-ubuntu,
+ fonts-firacode,
  tmux,
  fzf,
  bat | batcat,
@@ -153,4 +155,4 @@ Depends: ${misc:Depends},
  telcosec-cli
 Description: TelcoChisel Complete Telecom Security Metapackage Umbrella
  Umbrella metapackage installing the entire TelcoChisel telecom security
- ecosystem with all 100 specialized instruments across all 11 domains.
+ ecosystem with all 100 specialized instruments across all 10 domains.

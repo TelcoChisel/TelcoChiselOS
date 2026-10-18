@@ -51,6 +51,11 @@ PKGS_BASE=(
   # Core system & terminal productivity tools
   git vim nano htop fzf tmux zsh zsh-autosuggestions zsh-syntax-highlighting
   bat ripgrep jq tree xclip
+  # Desktop/terminal monospace fonts — the 05-desktop-customization.sh XFCE,
+  # terminator, conky, i3 and rofi configs reference these by family name, so
+  # they must actually be installed or the UI silently falls back. Ubuntu Mono
+  # for desktop/terminal; Fira Code for the glyph-heavy HUD surfaces.
+  fonts-ubuntu fonts-firacode
   build-essential cmake pkg-config golang-go
   ufw openssh-server
   openvpn network-manager-openvpn network-manager-openvpn-gnome

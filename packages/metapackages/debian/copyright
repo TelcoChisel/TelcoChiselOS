@@ -1,6 +1,6 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
 Upstream-Name: telcochisel-metapackages
-Source: https://github.com/TelcoSec-Tools/TelcoChiselOS
+Source: https://github.com/TelcoChisel/TelcoChiselOS
 
 Files: *
 Copyright: 2026 TelcoChisel Engineering Team <ops@telcochisel.com>
