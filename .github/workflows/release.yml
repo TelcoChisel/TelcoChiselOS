@@ -279,6 +279,20 @@ jobs:
           # Ensure TelcoChisel-live.iso compatibility hardlink exists
           cp -l "$ISO" TelcoChisel-live.iso 2>/dev/null || cp "$ISO" TelcoChisel-live.iso 2>/dev/null || true
 
+      # ── Boot smoke-test ──────────────────────────────────────────────────────
+      # The build already verifies filesystem.squashfs is *readable* inside the
+      # ISO, but not that the image actually *boots*. Run a headless QEMU/OVMF
+      # boot and fail the release on a kernel panic. A missing qemu (e.g. a
+      # self-hosted runner without it) downgrades to a warning rather than
+      # blocking the publish.
+      - name: Boot smoke-test the ISO (headless QEMU)
+        run: |
+          if ! command -v qemu-system-x86_64 >/dev/null 2>&1; then
+            sudo apt-get update -qq && sudo apt-get install -y -qq qemu-system-x86 ovmf \
+              || { echo "::warning::qemu unavailable — skipping ISO boot smoke-test"; exit 0; }
+          fi
+          bash scripts/test-iso-boot.sh --headless --uefi --timeout=120 "$ISO"
+
       # ── Post-build metadata ──────────────────────────────────────────────────
       - name: Generate Checksum & Metadata
         id: meta
