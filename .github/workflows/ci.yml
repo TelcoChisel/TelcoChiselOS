@@ -95,6 +95,20 @@ jobs:
               sys.exit(1)
           "
 
+      # Pinned actionlint lints every workflow for syntax, expression,
+      # needs/outputs and glob errors the plain YAML parse above cannot catch.
+      # Embedded-shell linting runs shellcheck at error severity only (this
+      # repo's existing ShellCheck policy), so pre-existing style/info findings
+      # in the long build scripts do not block CI. Prose kept as a YAML comment
+      # here — not inside run: — so shellcheck does not parse it as a directive.
+      - name: Lint GitHub Actions workflows (actionlint)
+        run: |
+          AL_VER=1.7.7
+          curl -fsSL -o /tmp/actionlint.tar.gz \
+            "https://github.com/rhysd/actionlint/releases/download/v${AL_VER}/actionlint_${AL_VER}_linux_amd64.tar.gz"
+          tar -xzf /tmp/actionlint.tar.gz -C /tmp actionlint
+          /tmp/actionlint -color -shellcheck="shellcheck --severity=error"
+
       - name: Setup Node.js
         if: steps.changes.outputs.catalogs == 'true'
         uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4

@@ -83,7 +83,9 @@ jobs:
           if [ -f VERSION ]; then
             VER=$(head -n 1 VERSION | tr -d '[:space:]')
           else
-            VER="2026.1"
+            # VERSION should always exist (release.yml writes it); fall back to
+            # the newest git tag rather than a stale hardcoded value.
+            VER=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "latest")
           fi
           VER="${VER#v}"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
@@ -156,9 +158,12 @@ jobs:
 
       - name: Verify VM Appliance Boot via QEMU
         run: |
-          if [ -f dist/vm/TelcoChisel-*-Proxmox.qcow2 ]; then
+          # Resolve the glob first — `[ -f glob ]` is unreliable when it expands
+          # to zero or multiple files (SC2144). Pick the first match, if any.
+          PROXMOX_QCOW=$(ls dist/vm/TelcoChisel-*-Proxmox.qcow2 2>/dev/null | head -1 || true)
+          if [ -n "$PROXMOX_QCOW" ] && [ -f "$PROXMOX_QCOW" ]; then
             echo "[*] Smoke-testing Proxmox QCOW2 in QEMU..."
-            ./scripts/test-vm-boot.sh --timeout=90 dist/vm/TelcoChisel-*-Proxmox.qcow2
+            ./scripts/test-vm-boot.sh --timeout=90 "$PROXMOX_QCOW"
           else
             echo "[*] Proxmox QCOW2 not built in this run; skipping boot test."
           fi
