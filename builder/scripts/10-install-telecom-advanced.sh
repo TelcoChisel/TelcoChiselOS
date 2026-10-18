@@ -290,47 +290,64 @@ if [ -d "${TELCOSEC_OPT}/srsgui" ]; then
 fi
 record_tool "srsGUI" "$(find ${TELCOSEC_OPT}/srsgui/build -name 'libsrsgui.so' 2>/dev/null | head -1)" "core"
 
-# ─── J. LTE-CellScanner ──────────────────────────────────────────────────────
-echo "  Installing LTE-CellScanner..."
-[ -d "${TELCOSEC_OPT}/lte-cellscanner" ] || clone_if_missing https://github.com/Evrytania/LTE-Cell-Scanner "${TELCOSEC_OPT}/lte-cellscanner" 2>/dev/null || true
-if [ -d "${TELCOSEC_OPT}/lte-cellscanner" ]; then
-  dpkg -s libitpp-dev &>/dev/null || apt-get install -y libitpp-dev 2>/dev/null || true
-  cd "${TELCOSEC_OPT}/lte-cellscanner"
-  mkdir -p build && cd build
-  export CFLAGS="-Wno-error -fcommon"
-  export CXXFLAGS="-Wno-error -fcommon"
-  cmake .. 2>&1 | tail -3
-  nice -n 10 make -j"$(get_build_procs)" 2>&1 | tail -5 || true
-  [ -f src/CellSearch ] && ln -sf "${TELCOSEC_OPT}/lte-cellscanner/build/src/CellSearch" \
-    /usr/local/bin/LTE-CellSearch || true
-  cd /
+# ─── J. LTE-CellScanner (deferred: setup tool) ──────────────────────────────
+# Builds on first run via `sudo lte-cellscanner-install`. The in-chroot build
+# was unreliable (empty build/, no src/CellSearch produced) and the compile is
+# heavy, so it is deferred like srsRAN/YateBTS/OpenBTS. Source is prefetched
+# at build time; the helper self-heals with a clone-if-missing guard.
+echo "  Creating LTE-CellScanner first-run installer..."
+cat > /usr/local/bin/lte-cellscanner-install << 'SCRIPT'
+#!/bin/bash
+set -e
+OPT=/opt/telcosec
+if [ ! -d "$OPT/lte-cellscanner/.git" ] && [ ! -d "$OPT/lte-cellscanner/src" ]; then
+  git clone --depth 1 https://github.com/Evrytania/LTE-Cell-Scanner "$OPT/lte-cellscanner"
 fi
-record_tool "LTE-CellScanner" "/usr/local/bin/LTE-CellSearch" "4g"
+dpkg -s libitpp-dev >/dev/null 2>&1 || { sudo apt-get update && sudo apt-get install -y libitpp-dev; }
+cd "$OPT/lte-cellscanner"
+mkdir -p build && cd build
+export CFLAGS="-Wno-error -fcommon" CXXFLAGS="-Wno-error -fcommon"
+cmake ..
+make -j"$(nproc)"
+if [ -f src/CellSearch ]; then
+  sudo ln -sf "$OPT/lte-cellscanner/build/src/CellSearch" /usr/local/bin/LTE-CellSearch
+  echo "LTE-CellScanner installed: run 'LTE-CellSearch'"
+else
+  echo "ERROR: build did not produce src/CellSearch" >&2; exit 1
+fi
+SCRIPT
+chmod +x /usr/local/bin/lte-cellscanner-install
+record_tool "LTE-CellScanner" "/usr/local/bin/lte-cellscanner-install" "4g"
 
-# ─── K. LTESniffer ───────────────────────────────────────────────────────────
-echo "  Installing LTESniffer..."
-[ -d "${TELCOSEC_OPT}/ltesniffer" ] || clone_if_missing https://github.com/SysSec-KAIST/LTESniffer "${TELCOSEC_OPT}/ltesniffer" 2>/dev/null || true
-if [ -d "${TELCOSEC_OPT}/ltesniffer" ]; then
-  cd "${TELCOSEC_OPT}/ltesniffer"
-  mkdir -p build && cd build
-  export CFLAGS="-Wno-error -fcommon -fpermissive"
-  export CXXFLAGS="-Wno-error -fcommon -fpermissive -std=c++14"
-  cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -5
-  nice -n 10 make -j"$(get_build_procs)" 2>&1 | tail -10 || make 2>&1 | tail -10 || true
-  
-  # Locate the compiled LTESniffer binary in build tree or src
-  SNIFFER_BIN=$(find . -type f \( -name "LTESniffer" -o -name "ltesniffer" \) 2>/dev/null | head -1)
-  if [ -n "$SNIFFER_BIN" ] && [ -f "$SNIFFER_BIN" ]; then
-    ln -sf "${TELCOSEC_OPT}/ltesniffer/build/${SNIFFER_BIN#./}" /usr/local/bin/ltesniffer
-    echo "  LTESniffer binary linked: ${SNIFFER_BIN}"
-  elif [ -f "${TELCOSEC_OPT}/ltesniffer/src/LTESniffer" ]; then
-    ln -sf "${TELCOSEC_OPT}/ltesniffer/src/LTESniffer" /usr/local/bin/ltesniffer
-  else
-    echo "  WARNING: LTESniffer binary not found after compilation"
-  fi
-  cd /
+# ─── K. LTESniffer (deferred: setup tool) ───────────────────────────────────
+# Builds on first run via `sudo ltesniffer-install`. LTESniffer bundles a full
+# srsRAN sub-build which stalled in the chroot (only srsRAN-src/ fetched, no
+# binary). Deferred like the other heavy RAN tools; source is prefetched.
+echo "  Creating LTESniffer first-run installer..."
+cat > /usr/local/bin/ltesniffer-install << 'SCRIPT'
+#!/bin/bash
+set -e
+OPT=/opt/telcosec
+if [ ! -d "$OPT/ltesniffer/.git" ] && [ ! -d "$OPT/ltesniffer/src" ]; then
+  git clone --depth 1 --branch LTESniffer-v2.1.0 https://github.com/SysSec-KAIST/LTESniffer "$OPT/ltesniffer" \
+    || git clone --depth 1 https://github.com/SysSec-KAIST/LTESniffer "$OPT/ltesniffer"
 fi
-record_tool "LTESniffer" "/usr/local/bin/ltesniffer" "4g"
+cd "$OPT/ltesniffer"
+mkdir -p build && cd build
+export CFLAGS="-Wno-error -fcommon -fpermissive"
+export CXXFLAGS="-Wno-error -fcommon -fpermissive -std=c++14"
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j"$(nproc)"
+SNIFFER_BIN=$(find . -type f \( -name LTESniffer -o -name ltesniffer \) 2>/dev/null | head -1)
+if [ -n "$SNIFFER_BIN" ]; then
+  sudo ln -sf "$OPT/ltesniffer/build/${SNIFFER_BIN#./}" /usr/local/bin/ltesniffer
+  echo "LTESniffer installed: run 'ltesniffer'"
+else
+  echo "ERROR: LTESniffer binary not found after build" >&2; exit 1
+fi
+SCRIPT
+chmod +x /usr/local/bin/ltesniffer-install
+record_tool "LTESniffer" "/usr/local/bin/ltesniffer-install" "4g"
 
 # ─── L. 5G GTP kernel module (gtp5g) ─────────────────────────────────────────
 echo "  Installing gtp5g kernel module..."
@@ -617,9 +634,23 @@ if [ ! -d "${TELCOSEC_OPT}/voiphopper" ]; then
 fi
 if [ -d "${TELCOSEC_OPT}/voiphopper" ]; then
   cd "${TELCOSEC_OPT}/voiphopper"
-  gcc -O2 -Wall voiphopper.c -o voiphopper -lpcap 2>/dev/null || make 2>/dev/null || true
-  if [ -f voiphopper ]; then
-    ln -sf "${TELCOSEC_OPT}/voiphopper/voiphopper" /usr/local/bin/voiphopper
+  # voiphopper ships autotools, not a single-file compile. Prefer the standard
+  # ./configure && make; fall back to a direct gcc of src/ if autotools is
+  # absent. (The previous `gcc voiphopper.c` failed — the source lives under
+  # src/ and needs the generated config.h from configure.)
+  if [ -x ./configure ]; then
+    ./configure >/dev/null 2>&1 && nice -n 10 make -j"$(get_build_procs)" >/dev/null 2>&1 || true
+  fi
+  VH_BIN=$(find . -maxdepth 2 -type f -name voiphopper -perm -u+x 2>/dev/null | head -1)
+  if [ -z "$VH_BIN" ]; then
+    # last-ditch direct compile of the primary source, wherever it lives
+    VH_SRC=$(find . -maxdepth 2 -name 'voiphopper.c' 2>/dev/null | head -1)
+    [ -n "$VH_SRC" ] && gcc -O2 -Wall "$VH_SRC" -o voiphopper -lpcap 2>/dev/null && VH_BIN=./voiphopper || true
+  fi
+  if [ -n "$VH_BIN" ] && [ -f "$VH_BIN" ]; then
+    ln -sf "${TELCOSEC_OPT}/voiphopper/${VH_BIN#./}" /usr/local/bin/voiphopper
+  else
+    echo "  WARNING: voiphopper build produced no binary"
   fi
   cd /
 fi
@@ -677,19 +708,32 @@ chmod +x /usr/local/bin/rtpbleed
 record_tool "rtpbleed" "/usr/local/bin/rtpbleed" "voip"
 
 
-# ─── T. Falcon GUI (LTE Network Analyzer) ──────────────────────────────────
-echo "  Installing Falcon GUI..."
-[ -d "${TELCOSEC_OPT}/falcon" ] || clone_if_missing https://github.com/falkenber9/falcon.git "${TELCOSEC_OPT}/falcon" 2>/dev/null || \
-clone_if_missing https://github.com/fkie-cad/FALCON "${TELCOSEC_OPT}/falcon" 2>/dev/null || true
-if [ -d "${TELCOSEC_OPT}/falcon" ]; then
-  cd "${TELCOSEC_OPT}/falcon"
-  mkdir -p build && cd build
-  cmake .. -DCMAKE_BUILD_TYPE=Release 2>&1 | tail -3
-  nice -n 10 make -j"$(get_build_procs)" 2>&1 | tail -5 || true
-  [ -f falcon ] && ln -sf "${TELCOSEC_OPT}/falcon/build/falcon" /usr/local/bin/falcon || true
-  cd /
+# ─── T. Falcon GUI (deferred: setup tool) ───────────────────────────────────
+# Builds on first run via `sudo falcon-install`. FALCON bundles a full srsLTE
+# sub-build that did not complete in the chroot (only helper .sh scripts were
+# produced, no falcon ELF). Deferred like the other heavy RAN tools.
+echo "  Creating Falcon first-run installer..."
+cat > /usr/local/bin/falcon-install << 'SCRIPT'
+#!/bin/bash
+set -e
+OPT=/opt/telcosec
+if [ ! -d "$OPT/falcon/.git" ] && [ ! -f "$OPT/falcon/CMakeLists.txt" ]; then
+  git clone --depth 1 https://github.com/falkenber9/falcon.git "$OPT/falcon" \
+    || git clone --depth 1 https://github.com/fkie-cad/FALCON "$OPT/falcon"
 fi
-record_tool "Falcon" "/usr/local/bin/falcon" "4g"
+cd "$OPT/falcon"
+mkdir -p build && cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release
+make -j"$(nproc)"
+if [ -f falcon ]; then
+  sudo ln -sf "$OPT/falcon/build/falcon" /usr/local/bin/falcon
+  echo "Falcon installed: run 'falcon'"
+else
+  echo "ERROR: build did not produce the falcon binary" >&2; exit 1
+fi
+SCRIPT
+chmod +x /usr/local/bin/falcon-install
+record_tool "Falcon" "/usr/local/bin/falcon-install" "4g"
 
 # ─── Final ownership (single pass, replaces per-tool chowns) ─────────────────
 chown -R telcosec:telcosec "${TELCOSEC_OPT}"

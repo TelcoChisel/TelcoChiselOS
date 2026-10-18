@@ -33,7 +33,9 @@ clone_bg https://github.com/FirmWire/FirmWire.git /opt/telcosec/firmwire
 clone_bg https://github.com/forth32/balongflash.git /opt/telcosec/balong-flash
 clone_bg https://github.com/forth32/balong-nvtool.git /opt/telcosec/balongtool
 clone_bg https://github.com/bkerler/mtkclient.git /opt/telcosec/mtkclient v2.1.4.1
-clone_bg https://github.com/osmocom/pysim.git /opt/telcosec/pysim 1.0
+# NB: the only upstream tag (1.0) predates pySim-shell.py; clone the default
+# branch (master) which ships it. osmocom/pysim has no newer release tags.
+clone_bg https://github.com/osmocom/pysim.git /opt/telcosec/pysim master
 clone_bg https://github.com/estkme-group/lpac.git /opt/telcosec/lpac v2.3.0
 clone_bg https://github.com/osmocom/simtrace2.git /opt/telcosec/simtrace2
 clone_bg https://github.com/tomasz-lisowski/simurai.git /opt/telcosec/simurai --recurse-submodules --shallow-submodules
