@@ -81,8 +81,12 @@ jobs:
             VERSION="${GITHUB_REF_NAME}"
           elif [ -n "${{ github.event.inputs.version_tag }}" ] && [ "${{ github.event.inputs.version_tag }}" != "latest" ]; then
             VERSION="${{ github.event.inputs.version_tag }}"
+          elif [ -f VERSION ]; then
+            # Fall back to the repo-root VERSION file (written by release.yml)
+            # instead of a hardcoded version that drifts every release.
+            VERSION="v$(head -n1 VERSION | tr -d '[:space:]')"
           else
-            VERSION="v2026.2"
+            VERSION="latest"
           fi
           CLEAN_VERSION="${VERSION#v}"
           COMMIT_SHA=$(git rev-parse --short HEAD)
@@ -214,6 +218,22 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha,scope=telcochisel-base
           cache-to: type=gha,mode=min,scope=telcochisel-base
+          # Supply-chain: emit an SBOM and SLSA provenance attestation alongside
+          # the image. Expected for a security product; viewable via `docker buildx
+          # imagetools inspect` / `cosign download sbom`.
+          sbom: true
+          provenance: mode=max
+
+      - name: Scan telcochisel-base for vulnerabilities (Trivy)
+        if: steps.tags.outputs.smoke_tag != ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        continue-on-error: true
+        with:
+          image-ref: ${{ steps.tags.outputs.smoke_tag }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'
 
       - name: Verify telcochisel-base healthcheck
         if: github.event.inputs.run_smoke_tests != 'false' && steps.tags.outputs.smoke_tag != ''
@@ -346,6 +366,19 @@ jobs:
           tags: ${{ steps.tags.outputs.tags }}
           cache-from: type=gha,scope=telcochisel-${{ matrix.image }}
           cache-to: type=gha,mode=min,scope=telcochisel-${{ matrix.image }}
+          sbom: true
+          provenance: mode=max
+
+      - name: Scan telcochisel-${{ matrix.image }} for vulnerabilities (Trivy)
+        if: steps.tags.outputs.smoke_tag != ''
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        continue-on-error: true
+        with:
+          image-ref: ${{ steps.tags.outputs.smoke_tag }}
+          format: 'table'
+          severity: 'CRITICAL,HIGH'
+          ignore-unfixed: true
+          exit-code: '0'
 
       - name: Verify telcochisel-${{ matrix.image }} healthcheck
         if: github.event.inputs.run_smoke_tests != 'false' && steps.tags.outputs.smoke_tag != ''
