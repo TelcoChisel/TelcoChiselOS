@@ -281,22 +281,36 @@ if [ ! -f "${CONDA_PREFIX}/include/rtl-sdr.h" ]; then
 fi
 record_tool "librtlsdr" "${CONDA_PREFIX}/include/rtl-sdr.h" "sdr"
 
-# gr-gsm is not on conda-forge; build from source against the conda env using system cmake
-clone_if_missing https://github.com/bkerler/gr-gsm /opt/telcosec/src/gr-gsm || true
-if [ -d /opt/telcosec/src/gr-gsm ]; then
-  /usr/bin/cmake -S /opt/telcosec/src/gr-gsm -B /opt/telcosec/src/gr-gsm/build \
-    -DCMAKE_INSTALL_PREFIX="$CONDA_PREFIX" -DCMAKE_BUILD_TYPE=Release \
-    -DCMAKE_CXX_FLAGS="-std=c++17 -Wno-error" -DCMAKE_C_FLAGS="-Wno-error -fcommon" \
-    -DCMAKE_MODULE_PATH="$CONDA_PREFIX/lib/cmake/gnuradio" >/dev/null 2>&1 || true
-  nice -n 10 make -C /opt/telcosec/src/gr-gsm/build -j"$(get_build_procs)" >/dev/null 2>&1 || true
-  make -C /opt/telcosec/src/gr-gsm/build install >/dev/null 2>&1 || true
-  if [ -f "${CONDA_PREFIX}/bin/grgsm_scanner" ]; then
-    echo "  gr-gsm installed."
-  else
-    echo "  WARNING: gr-gsm build did not produce grgsm_scanner — treating as failed"
-  fi
+# gr-gsm (deferred: setup tool). gr-gsm is not on conda-forge and its cmake
+# app-codegen (.py.in -> .py for grgsm_scanner etc.) is incompatible with the
+# conda GNU Radio 3.10 in this env — make install silently skipped the apps,
+# so the build-time install was unreliable. Build on first run via
+# `sudo grgsm-install`, which compiles against whatever GNU Radio is present.
+echo "Creating gr-gsm first-run installer..."
+cat << 'GRGSM' | sudo tee /usr/local/bin/grgsm-install >/dev/null
+#!/bin/bash
+set -e
+OPT=/opt/telcosec
+PREFIX=/opt/telcosec/miniconda/envs/telcosec-sdr
+source /opt/telcosec/miniconda/etc/profile.d/conda.sh
+conda activate telcosec-sdr
+if [ ! -d "$OPT/src/gr-gsm/.git" ] && [ ! -f "$OPT/src/gr-gsm/CMakeLists.txt" ]; then
+  git clone https://github.com/bkerler/gr-gsm "$OPT/src/gr-gsm"
 fi
-record_tool "gr-gsm" "${CONDA_PREFIX}/bin/grgsm_scanner" "2g"
+cmake -S "$OPT/src/gr-gsm" -B "$OPT/src/gr-gsm/build" \
+  -DCMAKE_INSTALL_PREFIX="$PREFIX" -DCMAKE_BUILD_TYPE=Release \
+  -DCMAKE_CXX_FLAGS="-std=c++17 -Wno-error" -DCMAKE_C_FLAGS="-Wno-error -fcommon" \
+  -DCMAKE_MODULE_PATH="$PREFIX/lib/cmake/gnuradio"
+make -C "$OPT/src/gr-gsm/build" -j"$(nproc)"
+make -C "$OPT/src/gr-gsm/build" install
+if [ -f "$PREFIX/bin/grgsm_scanner" ]; then
+  echo "gr-gsm installed: run 'grgsm_scanner' / 'grgsm_livemon'"
+else
+  echo "ERROR: gr-gsm build did not produce grgsm_scanner" >&2; exit 1
+fi
+GRGSM
+sudo chmod +x /usr/local/bin/grgsm-install
+record_tool "gr-gsm" "/usr/local/bin/grgsm-install" "2g"
 # Also re-verify UHD now that Conda gnuradio packages have landed
 record_tool "UHD" "$(command -v uhd_usrp_probe 2>/dev/null || find "${CONDA_PREFIX}/bin" /usr/bin -name 'uhd_usrp_probe' 2>/dev/null | head -1)" "sdr"
 

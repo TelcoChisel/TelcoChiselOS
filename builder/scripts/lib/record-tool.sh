@@ -80,10 +80,21 @@ record_tool_summary() {
     return 0
   fi
 
+  # Deduplicate by tool name, last-record-wins: a tool may be recorded more
+  # than once (e.g. UHD is verified early after the source build and again
+  # after the conda-forge package lands). The final record reflects reality,
+  # so a later PASS must supersede an earlier FAIL. Manifest line format is
+  # "STATUS<TAB>CATEGORY<TAB>NAME<TAB>ARTIFACT".
+  local _dedup
+  _dedup=$(awk -F'\t' '
+    /^(PASS|FAIL)\t/ { last[$3] = $0; order[$3] = NR }
+    END { for (n in last) printf "%d\t%s\n", order[n], last[n] }
+  ' "$_TELCOSEC_MANIFEST" 2>/dev/null | sort -n | cut -f2-)
+
   local total pass fail
-  total=$(grep -c '^PASS\|^FAIL' "$_TELCOSEC_MANIFEST" 2>/dev/null || echo 0)
-  pass=$(grep  -c '^PASS' "$_TELCOSEC_MANIFEST" 2>/dev/null || echo 0)
-  fail=$(grep  -c '^FAIL' "$_TELCOSEC_MANIFEST" 2>/dev/null || echo 0)
+  total=$(printf '%s\n' "$_dedup" | grep -c '^PASS\|^FAIL' 2>/dev/null || echo 0)
+  pass=$(printf  '%s\n' "$_dedup" | grep -c '^PASS' 2>/dev/null || echo 0)
+  fail=$(printf  '%s\n' "$_dedup" | grep -c '^FAIL' 2>/dev/null || echo 0)
 
   echo ""
   echo "╔══════════════════════════════════════════════╗"
@@ -96,7 +107,7 @@ record_tool_summary() {
   if [ "$fail" -gt 0 ]; then
     echo ""
     echo "  FAILED tools (will be missing from the live image):"
-    grep '^FAIL' "$_TELCOSEC_MANIFEST" | while IFS=$'\t' read -r _status _cat name artifact; do
+    printf '%s\n' "$_dedup" | grep '^FAIL' | while IFS=$'\t' read -r _status _cat name artifact; do
       printf "    • %-28s  %s\n" "$name" "$artifact"
     done
     echo ""

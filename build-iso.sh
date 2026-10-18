@@ -422,7 +422,6 @@ if ! $PACK_ONLY; then
     _phase  5 "05 · Desktop customization"           chroot_run 05-desktop-customization.sh
     _phase  7 "07 · Calamares installer"             chroot_run 07-install-installer.sh
     _phase  8 "08 · System optimization"             chroot_run 08-system-optimization.sh
-    _phase 12 "12 · Install Dashboard & CLI"         chroot_run 12-install-dashboard.sh
   else
     echo "--> Running provisioning scripts (Field Full Edition: all 100 telecom tools)..."
     _phase  0 "00 · Consolidated package install"    chroot_run 00-install-all-packages.sh
@@ -437,7 +436,6 @@ if ! $PACK_ONLY; then
     _phase  9 "09 · 5Ghoul helpers"                  chroot_run 09-install-5ghoul.sh
     _phase 10 "10 · Advanced telecom tools"          chroot_run 10-install-telecom-advanced.sh
     _phase 11 "11 · Device flash tools"              chroot_run 11-install-device-tools.sh
-    _phase 12 "12 · Install Dashboard"               chroot_run 12-install-dashboard.sh
   fi
 
   # ── Tool build manifest summary ─────────────────────────────────────────────

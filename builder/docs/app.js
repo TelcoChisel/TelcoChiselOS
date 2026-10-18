@@ -40,7 +40,7 @@ const toolsCatalog = [
     {
             "name": "gr-gsm Tools",
             "category": "sdr",
-            "status": "ready",
+            "status": "setup",
             "desc": "Gnu Radio blocks and scripts for receiving, decoding, and analyzing the GSM air interface (2G). Includes live channel monitoring.",
             "path": "Conda env (telcosec-sdr)",
             "cmd": "grgsm_livemon"
@@ -256,7 +256,7 @@ const toolsCatalog = [
     {
             "name": "LTE-CellScanner",
             "category": "4g",
-            "status": "ready",
+            "status": "setup",
             "desc": "Open-source LTE cell searcher and MIB/SIB decoder. Scans a frequency range and decodes cell IDs, bandwidth, and system information blocks.",
             "path": "/opt/telcosec/lte-cellscanner/",
             "cmd": "LTE-CellSearch -s 2650e6"
@@ -264,7 +264,7 @@ const toolsCatalog = [
     {
             "name": "LTESniffer",
             "category": "4g",
-            "status": "ready",
+            "status": "setup",
             "desc": "Open-source LTE downlink and uplink sniffer. Decodes physical layer frames and logs RRC, NAS, and user-plane traffic to PCAP.",
             "path": "/opt/telcosec/ltesniffer/",
             "cmd": "ltesniffer -A 2 -f 2630e6 -C -m 0"
@@ -760,7 +760,7 @@ const toolsCatalog = [
     {
             "name": "Falcon (LTE Security Analyzer)",
             "category": "4g",
-            "status": "ready",
+            "status": "setup",
             "desc": "Fast cellular over-the-air protocol analysis framework for detecting LTE rogue base stations, tracking temporary mobile identifiers, and inspecting RRC connection setups.",
             "path": "/usr/local/bin/falcon",
             "cmd": "falcon --help"

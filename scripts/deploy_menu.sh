@@ -8,7 +8,7 @@
 #   - Live ISO Image Builders (Full Field Edition, Modular Lite, Cloud CI)
 #   - Virtual Machine Appliance Builders (Proxmox, VMware, VirtualBox, Cloud CI)
 #   - WSL2 Distro Generator
-#   - Host Daemons & System Services (ChiselControl HUD, Open5GS, SigPloit)
+#   - Host Daemons & System Services (Open5GS, SigPloit)
 #   - Real-time Observability, Healthchecks, and Teardown
 #   - Direct TelcoSec Academy & Documentation Integration
 #
@@ -245,24 +245,6 @@ deploy_k8s_suite() {
   bash "${REPO_ROOT}/docker/pods/pod-deploy.sh" apply-k8s "${REPO_ROOT}/docker/pods/k8s-telecom-suite-pod.yaml"
 }
 
-deploy_host_chiselcontrol() {
-  printf "${CYAN}[*] Managing ChiselControl Web HUD Dashboard...${NC}\n"
-  if systemctl is-active --quiet chiselcontrol 2>/dev/null; then
-    printf "${GREEN}[✓] ChiselControl is currently RUNNING at: http://localhost:8080${NC}\n"
-  elif [ -f /etc/systemd/system/chiselcontrol.service ]; then
-    printf "Starting chiselcontrol.service via sudo...\n"
-    sudo systemctl start chiselcontrol
-    printf "${GREEN}[✓] ChiselControl started! Access HUD: http://localhost:8080${NC}\n"
-  elif [ -d /opt/telcosec/dashboard ]; then
-    printf "Starting dashboard directly from /opt/telcosec/dashboard...\n"
-    (cd /opt/telcosec/dashboard && npm run start &) || true
-    printf "${GREEN}[✓] Dashboard initialized on :8080${NC}\n"
-  else
-    printf "${AMBER}[!] ChiselControl dashboard service not found in local environment.${NC}\n"
-    printf "    (This service is pre-installed on the TelcoChisel Live OS).\n"
-  fi
-}
-
 deploy_host_open5gs() {
   printf "${CYAN}[*] Managing Host Open5GS 5G Core Network...${NC}\n"
   if systemctl list-units "open5gs-*" --state=active 2>/dev/null | grep -q "open5gs-"; then
@@ -442,7 +424,7 @@ show_all_status() {
   # Host services
   if systemctl is-system-running &>/dev/null; then
     printf "${CYAN}--- [Host Telecom Services] ---${NC}\n"
-    for s in chiselcontrol open5gs-amfd open5gs-smfd open5gs-upfd; do
+    for s in open5gs-amfd open5gs-smfd open5gs-upfd; do
       if systemctl is-active --quiet "$s" 2>/dev/null; then
         printf "  [✓] %-20s ${GREEN}RUNNING${NC}\n" "$s"
       elif systemctl list-unit-files "$s.service" &>/dev/null; then
@@ -565,17 +547,16 @@ interactive_menu() {
     printf "   12) Build VM Appliances              (Proxmox QCOW2, VMware, VirtualBox OVA)\n"
     printf "   13) Build WSL2 Distro Tarball        (Run TelcoChisel inside Windows WSL2)\n\n"
 
-    printf "${CYAN}  [Host & Dashboard Services]${NC}\n"
-    printf "   14) ChiselControl Web HUD            (Port :8080)\n"
-    printf "   15) Host Open5GS 5G Core Daemons     (systemd / installer)\n\n"
+    printf "${CYAN}  [Host Services]${NC}\n"
+    printf "   14) Host Open5GS 5G Core Daemons     (systemd / installer)\n\n"
 
     printf "${CYAN}  [Observability, Management & Training]${NC}\n"
-    printf "   16) Inspect Status & Active Services (Live container, pod, host & artifact probe)\n"
-    printf "   17) Stop / Tear Down Services        (Selective or full shutdown)\n"
-    printf "   18) TelcoSec Academy & Testbeds      (Explore courses & ProLabs)\n"
-    printf "   19) Exit Navigator\n\n"
+    printf "   15) Inspect Status & Active Services (Live container, pod, host & artifact probe)\n"
+    printf "   16) Stop / Tear Down Services        (Selective or full shutdown)\n"
+    printf "   17) TelcoSec Academy & Testbeds      (Explore courses & ProLabs)\n"
+    printf "   18) Exit Navigator\n\n"
 
-    read -rp "Enter selection [1-19]: " choice
+    read -rp "Enter selection [1-18]: " choice
     echo ""
 
     case "$choice" in
@@ -592,12 +573,11 @@ interactive_menu() {
       11) iso_menu ;;
       12) vm_menu ;;
       13) build_wsl_action ;;
-      14) deploy_host_chiselcontrol ;;
-      15) deploy_host_open5gs ;;
-      16) show_all_status ;;
-      17) stop_services ;;
-      18) open_academy ;;
-      19|q|Q|exit)
+      14) deploy_host_open5gs ;;
+      15) show_all_status ;;
+      16) stop_services ;;
+      17) open_academy ;;
+      18|q|Q|exit)
         printf "${GREEN}Thank you for using TelcoChisel OS. Secure the signaling!${NC}\n"
         exit 0
         ;;
@@ -626,11 +606,10 @@ case "${1:-}" in
       device-pod|k8s-device)      deploy_k8s_device ;;
       suite|k8s-suite)            deploy_k8s_suite ;;
       podman|podman-pod)          deploy_podman_pod ;;
-      chiselcontrol|dashboard)    deploy_host_chiselcontrol ;;
       open5gs)                    deploy_host_open5gs ;;
       *)
         echo "Unknown service: $target" >&2
-        echo "Valid targets: base, sdr, core, device, compose, 5g-core, sdr-pod, device-pod, suite, podman, chiselcontrol, open5gs" >&2
+        echo "Valid targets: base, sdr, core, device, compose, 5g-core, sdr-pod, device-pod, suite, podman, open5gs" >&2
         exit 1
         ;;
     esac
@@ -696,7 +675,7 @@ Usage:
   ./deploy_menu.sh --help                   Show this help message
 
 Available deploy targets:
-  base, sdr, core, device, compose, 5g-core, sdr-pod, device-pod, suite, podman, chiselcontrol, open5gs
+  base, sdr, core, device, compose, 5g-core, sdr-pod, device-pod, suite, podman, open5gs
 EOF
     ;;
 

@@ -37,8 +37,7 @@ TelcoChiselOS/
 │   │   ├── 08-system-optimization.sh    # Real-time kernel tuning, udev rules, limits
 │   │   ├── 09-install-5ghoul.sh         # 5Ghoul 5G NR fuzzer framework
 │   │   ├── 10-install-telecom-advanced.sh # Advanced telecom tools (SigPloit, SCAT, etc.)
-│   │   ├── 11-install-device-tools.sh   # Firmware flashing (EDL, MTKClient, Heimdall)
-│   │   └── 12-install-dashboard.sh      # ChiselControl dashboard (nginx/PHP) + DB init
+│   │   └── 11-install-device-tools.sh   # Firmware flashing (EDL, MTKClient, Heimdall)
 │   ├── menu/applications/     # XDG .desktop launcher shortcuts for the XFCE menu
 │   └── docs/                  # Offline HTML documentation (/usr/share/doc/telcosec/)
 ├── data/
