@@ -43,7 +43,6 @@ clone_bg https://github.com/free5gc/gtp5g                         "${TELCOSEC_OP
 clone_bg https://github.com/TelcoSec-Tools/RDNSx                  "${TELCOSEC_OPT}/rdnsx"
 clone_bg https://github.com/rlaager/docsis                        "${TELCOSEC_OPT}/docsis"
 clone_bg https://github.com/fkie-cad/FALCON                       "${TELCOSEC_OPT}/falcon"
-clone_bg https://github.com/TelcoSec-Tools/TelcoSec-ChiselControl-Dashboard "${TELCOSEC_OPT}/dashboard"
 if wait_clones "prefetch"; then
   echo "  Parallel clone complete."
 else
@@ -691,13 +690,6 @@ if [ -d "${TELCOSEC_OPT}/falcon" ]; then
   cd /
 fi
 record_tool "Falcon" "/usr/local/bin/falcon" "4g"
-
-# ─── U. TelcoSec ChiselControl Dashboard ──────────────────────────────────────
-# This section only clones the dashboard source (see the parallel clone block
-# near the top of this script) into /opt/telcosec/dashboard. The actual
-# nginx/PHP-FPM deployment — serving it, sudoers setup, data directories — is
-# done later by 12-install-dashboard.sh, which reads from that same clone.
-echo "  ChiselControl Dashboard source cloned to ${TELCOSEC_OPT}/dashboard (deployed by 12-install-dashboard.sh)"
 
 # ─── Final ownership (single pass, replaces per-tool chowns) ─────────────────
 chown -R telcosec:telcosec "${TELCOSEC_OPT}"

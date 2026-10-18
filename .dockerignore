@@ -18,7 +18,6 @@ builder/scripts/01-install-base.sh
 builder/scripts/05-desktop-customization.sh
 builder/scripts/07-install-installer.sh
 builder/scripts/08-system-optimization.sh
-builder/scripts/12-install-dashboard.sh
 
 # Docs portal / node
 docs/

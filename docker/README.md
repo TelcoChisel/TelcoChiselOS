@@ -7,9 +7,9 @@ Docker images of the TelcoChisel toolset, as an alternative to booting the
 **This is a second, narrower delivery format, not a replacement for the ISO.**
 The live ISO remains the right vehicle for the full SDR/RAN research
 experience — desktop GUI tools, kernel-module-dependent tools (`gtp5g`),
-realtime/kernel-cmdline tuning, and the systemd-managed ChiselControl
-dashboard are either unavailable or degraded in a container. See "Known
-limitations" below before choosing a container over the ISO for a given task.
+and realtime/kernel-cmdline tuning are either unavailable or degraded in a
+container. See "Known limitations" below before choosing a container over the
+ISO for a given task.
 
 > 🎓 **Hands-On Telecom Security Training & Live Labs:**  
 > Learn how to execute signaling assessments, 5G SA core exploits, and SDR wireless testing with interactive labs at the **[TelcoSec Academy](https://app.telcosec.net)**:

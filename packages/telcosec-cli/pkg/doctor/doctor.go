@@ -16,13 +16,13 @@ import (
 
 // ANSI Color definitions
 const (
-	Bold    = "\033[1m"
-	Cyan    = "\033[1;36m"
-	Green   = "\033[1;32m"
-	Yellow  = "\033[1;33m"
-	Red     = "\033[1;31m"
-	Dim     = "\033[2m"
-	Reset   = "\033[0m"
+	Bold   = "\033[1m"
+	Cyan   = "\033[1;36m"
+	Green  = "\033[1;32m"
+	Yellow = "\033[1;33m"
+	Red    = "\033[1;31m"
+	Dim    = "\033[2m"
+	Reset  = "\033[0m"
 )
 
 // CheckItem represents a single diagnostic assertion result.
@@ -118,10 +118,8 @@ func RunDoctor(w io.Writer) DoctorReport {
 
 	// 5. Core Services
 	services := map[string]string{
-		"pcscd":       "Smartcard PC/SC Daemon",
-		"postgresql":  "ChiselControl Database Backend",
-		"nginx":       "ChiselControl Web Server",
-		"docker":      "Container Runtime (Open5GS/RAN)",
+		"pcscd":  "Smartcard PC/SC Daemon",
+		"docker": "Container Runtime (Open5GS/RAN)",
 	}
 
 	for srv, desc := range services {
