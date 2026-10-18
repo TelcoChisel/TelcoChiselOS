@@ -60,7 +60,7 @@ flowchart TD
         TELCOPKG["telcosec-pkg<br/>(11-Tier Modular Metapackage Client via meta.telcosec.net)"]
     end
 
-    subgraph L4["4. 100 Pre-Configured Telecom Instruments (11 Categories)"]
+    subgraph L4["4. 100 Pre-Configured Telecom Instruments (10 Domains)"]
         C01["01. SDR & RF DSP (GNU Radio 3.10, UHD, Gqrx, URH, Inspectrum)"]
         C02["02. GSM & 2G Stacks (OsmocomBB, OpenBTS, YateBTS, OsmoGSM)"]
         C03["03. LTE & 4G RAN (srsRAN, srsUE, LTE-CellScanner, LTESniffer)"]

@@ -10,7 +10,9 @@
     <meta name="description"
         content="Free bootable Linux OS for 5G and 4G telecom security research. Ships with GNU Radio, FirmWire, srsRAN, Open5GS, SIMtrace 2, and 100 pre-configured tools across 11 suites for SDR analysis, baseband auditing, and cellular protocol penetration testing.">
     <meta name="keywords"
-        content="telecom security linux, 5G security research, 4G LTE penetration testing, SDR security, baseband analysis, FirmWire, GNU Radio, srsRAN, Open5GS, SIMtrace, HackRF, USRP, BladeRF, TelcoChisel">
+        content="telecom security linux, 5G security research, 4G LTE penetration testing, SDR security, software defined radio, baseband analysis, IMSI catcher, GSM sniffing, 5Ghoul, UERANSIM, FirmWire, GNU Radio, srsRAN, Open5GS, SIM eSIM audit, SIMtrace, HackRF, USRP, BladeRF, RTL-SDR, Ubuntu live USB, TelcoChisel, TelcoSec">
+    <meta name="application-name" content="TelcoChisel OS">
+    <meta name="apple-mobile-web-app-title" content="TelcoChisel OS">
     <meta name="author" content="TelcoSec">
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1">
     <meta name="theme-color" content="#00ffd5">
@@ -24,7 +26,7 @@
     <meta property="og:description"
         content="Free bootable Linux OS for 5G and 4G telecom security research. Ships with GNU Radio, FirmWire, srsRAN, Open5GS, SIMtrace 2, and 100 pre-configured tools across 11 suites for SDR analysis, baseband auditing, and cellular protocol penetration testing.">
     <meta property="og:image"
-        content="https://raw.githubusercontent.com/TelcoSec-Tools/TelcoChiselOS/main/assets/repo_cover.png">
+        content="https://raw.githubusercontent.com/TelcoChisel/TelcoChiselOS/main/assets/repo_cover.png">
     <meta property="og:image:width" content="1280">
     <meta property="og:image:height" content="640">
     <meta property="og:image:alt" content="TelcoChisel — Telecom Security Linux Distribution">
@@ -39,7 +41,7 @@
     <meta name="twitter:description"
         content="Free bootable Linux OS for 5G and 4G telecom security research. Ships with GNU Radio, FirmWire, srsRAN, Open5GS, SIMtrace 2, and 100 pre-configured tools across 11 suites for SDR analysis, baseband auditing, and cellular protocol penetration testing.">
     <meta name="twitter:image"
-        content="https://raw.githubusercontent.com/TelcoSec-Tools/TelcoChiselOS/main/assets/repo_cover.png">
+        content="https://raw.githubusercontent.com/TelcoChisel/TelcoChiselOS/main/assets/repo_cover.png">
 
     <!-- Favicon -->
     <link rel="icon" type="image/svg+xml"
@@ -71,9 +73,9 @@
         "description": "TelcoChisel is a free, bootable live Linux distribution purpose-built for 5G and 4G telecom security research. It ships with 100 pre-configured tools including GNU Radio, FirmWire baseband emulation, srsRAN, Open5GS, SIMtrace 2, QCSuper, Wireshark, and the 5Ghoul 5G NR fuzzer.",
         "url": "https://telcochisel.com/",
         "downloadUrl": "https://sourceforge.net/projects/telcochisel/files/latest/download",
-        "softwareVersion": "2026.2",
-        "releaseNotes": "https://github.com/TelcoSec-Tools/TelcoChiselOS/releases",
-        "screenshot": "https://raw.githubusercontent.com/TelcoSec-Tools/TelcoChiselOS/main/assets/repo_cover.png",
+        "softwareVersion": "2026.3.0",
+        "releaseNotes": "https://github.com/TelcoChisel/TelcoChiselOS/releases",
+        "screenshot": "https://raw.githubusercontent.com/TelcoChisel/TelcoChiselOS/main/assets/repo_cover.png",
         "featureList": [
           "SDR drivers for USRP B210, HackRF One, BladeRF, LimeSDR, and RTL-SDR compiled from source",
           "Baseband firmware emulation with FirmWire (Samsung Shannon and MediaTek MTK)",
@@ -86,7 +88,7 @@
           "SCTP kernel tuning and real-time scheduling for SDR stability",
           "Calamares live-to-disk installer"
         ],
-        "license": "https://github.com/TelcoSec-Tools/TelcoChiselOS/blob/main/LICENSE",
+        "license": "https://github.com/TelcoChisel/TelcoChiselOS/blob/main/LICENSE",
         "offers": {
           "@type": "Offer",
           "price": "0",
@@ -354,8 +356,8 @@
             </div>
 
             <div class="nav-footer">
-                <p>TelcoChisel v2026.2</p>
-                <a href="https://github.com/TelcoSec-Tools/TelcoChiselOS" target="_blank"
+                <p>TelcoChisel v2026.3.0</p>
+                <a href="https://github.com/TelcoChisel/TelcoChiselOS" target="_blank"
                     style="font-size: 0.8rem; display: flex; align-items: center; gap: 6px;">
                     <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
                         stroke-linecap="round" stroke-linejoin="round">
@@ -387,7 +389,7 @@
                     <img src="repo_cover.png" alt="TelcoChisel OS: Advanced Telecom Security Distribution by TelcoSec" style="width: 100%; border-radius: 12px; border: 1px solid rgba(0, 242, 255, 0.25); box-shadow: 0 10px 30px rgba(0, 242, 255, 0.18); display: block;" />
                 </div>
 
-                <div class="section-header" data-label="// Overview :: TelcoChisel v2026.2">
+                <div class="section-header" data-label="// Overview :: TelcoChisel v2026.3.0">
                     <h1>TelcoChisel — Telecom Security Linux Distribution</h1>
                     <p class="subtitle">Bootable live OS for 5G/4G security research, SDR analysis, and baseband
                         auditing</p>
@@ -405,14 +407,14 @@
 
                 <!-- Download CTA -->
                 <div class="download-cta">
-                    <span class="beta-badge">RELEASE // v2026.2</span>
+                    <span class="beta-badge">RELEASE // v2026.3.0</span>
                     <button class="btn-download" onclick="openDownloadModal()">
                         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
                             <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/>
                         </svg>
                         Download TelcoChisel ISO
                     </button>
-                    <a href="https://github.com/TelcoSec-Tools/TelcoChiselOS" target="_blank" class="btn-gh">
+                    <a href="https://github.com/TelcoChisel/TelcoChiselOS" target="_blank" class="btn-gh">
                         <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.37 0 0 5.37 0 12c0 5.31 3.435 9.795 8.205 11.385.6.105.825-.255.825-.57 0-.285-.015-1.23-.015-2.235-3.015.555-3.795-.735-4.035-1.41-.135-.345-.72-1.41-1.23-1.695-.42-.225-1.02-.78-.015-.795.945-.015 1.62.87 1.845 1.23 1.08 1.815 2.805 1.305 3.495.99.105-.78.42-1.305.765-1.605-2.67-.3-5.46-1.335-5.46-5.925 0-1.305.465-2.385 1.23-3.225-.12-.3-.54-1.53.12-3.18 0 0 1.005-.315 3.3 1.23.96-.27 1.98-.405 3-.405s2.04.135 3 .405c2.295-1.56 3.3-1.23 3.3-1.23.66 1.65.24 2.88.12 3.18.765.84 1.23 1.905 1.23 3.225 0 4.605-2.805 5.625-5.475 5.925.435.375.81 1.095.81 2.22 0 1.605-.015 2.895-.015 3.3 0 .315.225.69.825.57A12.02 12.02 0 0 0 24 12c0-6.63-5.37-12-12-12z"/></svg>
                         View on GitHub
                     </a>
@@ -1921,8 +1923,8 @@ sudo 5ghoul-run --Attack.Name=NAS_5GS_Fuzz --UE.IMSI=001011234567890</code></pre
                             configs, and kernel tuners.
                         </p>
                         <div style="font-size: 0.85rem; color: var(--text-muted);">
-                            <strong>Repository:</strong> <a href="https://github.com/TelcoSec-Tools/TelcoChiselOS"
-                                target="_blank">github.com/TelcoSec-Tools/TelcoChiselOS</a>
+                            <strong>Repository:</strong> <a href="https://github.com/TelcoChisel/TelcoChiselOS"
+                                target="_blank">github.com/TelcoChisel/TelcoChiselOS</a>
                         </div>
                     </div>
 
@@ -2127,7 +2129,7 @@ sudo 5ghoul-run --Attack.Name=NAS_5GS_Fuzz --UE.IMSI=001011234567890</code></pre
                 </svg>
                 <div>
                     <div class="dl-modal-title" id="dl-modal-title">Download TelcoChisel OS</div>
-                    <div class="dl-modal-sub">Release &mdash; v2026.2 (Noble Numbat)</div>
+                    <div class="dl-modal-sub">Release &mdash; v2026.3.0 (Noble Numbat)</div>
                 </div>
             </div>
             <div class="dl-modal-body">
@@ -2139,7 +2141,7 @@ sudo 5ghoul-run --Attack.Name=NAS_5GS_Fuzz --UE.IMSI=001011234567890</code></pre
                             <strong style="color: #fff; font-size: 0.88rem;">Flagship Field Edition (Full)</strong>
                             <span style="font-size: 0.75rem; color: #f59e0b; font-weight: 600;">~5.5 GB</span>
                         </div>
-                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">All 100 telecom security tools pre-installed across 11 categories. 100% offline air-gapped field readiness.</div>
+                        <div style="font-size: 0.78rem; color: var(--text-muted); margin-top: 4px;">All 100 telecom security tools pre-installed across 10 domains. 100% offline air-gapped field readiness.</div>
                     </a>
 
                     <a href="https://sourceforge.net/projects/telcochisel/files/" target="_blank" class="dl-edition-card" onclick="closeDownloadModal()" style="display: block; padding: 12px 14px; background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); border-left: 3px solid #00ffd5; text-decoration: none; border-radius: 4px;">
