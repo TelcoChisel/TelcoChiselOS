@@ -599,6 +599,55 @@ jobs:
           sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_publish "$SF_TARGET"
           echo "✓ SF versioned → https://sourceforge.net/projects/$SF_PROJECT/files/$VERSION/"
 
+      # Retention for stable releases: SourceForge has a finite project quota and
+      # each vX.Y.Z/ ISO is ~5-6 GB. Without pruning, every release adds another
+      # ISO forever. Keep the newest KEEP_STABLE version folders' ISOs; from older
+      # folders delete only the heavy *.iso (leave checksums/build-info/README for
+      # provenance — they are < 1 KB). GitHub Releases remains the full archive.
+      - name: Prune old stable ISOs on SourceForge
+        if: env.HAS_SF_KEY == 'true' && steps.version.outputs.is_nightly == 'false'
+        env:
+          SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
+          SF_USER: ${{ secrets.SF_USER }}
+          KEEP_STABLE: "2"
+        run: |
+          set -euo pipefail
+          SF_ROOT="/home/frs/project/$SF_PROJECT"
+          SF_TARGET="$SF_USER,$SF_PROJECT@$SF_HOST"
+
+          # List version folders (vMAJOR.MINOR[.PATCH]) at the project root.
+          printf 'cd %s\nls -1\n' "$SF_ROOT" > sftp_vls
+          VERSIONS=$(sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_vls "$SF_TARGET" \
+            | grep -v '^sftp>' | sed 's|.*/||' \
+            | grep -E '^v[0-9]+\.[0-9]+(\.[0-9]+)?$' | sort -V -r || true)
+
+          KEPT=0
+          PRUNE_DIRS=""
+          for v in $VERSIONS; do
+            KEPT=$((KEPT + 1))
+            if [ "$KEPT" -le "${KEEP_STABLE}" ]; then
+              echo "keep   $v"
+            else
+              echo "prune  $v (ISO only)"
+              PRUNE_DIRS="$PRUNE_DIRS $v"
+            fi
+          done
+
+          if [ -z "$PRUNE_DIRS" ]; then
+            echo "Nothing to prune (<= ${KEEP_STABLE} stable versions present)."
+            exit 0
+          fi
+
+          # Delete only the large .iso from each pruned folder; keep companions.
+          {
+            echo "cd $SF_ROOT"
+            for d in $PRUNE_DIRS; do
+              printf -- '-rm %s/*.iso\n' "$d"
+            done
+          } > sftp_oldprune
+          sftp -i ~/.ssh/sf_deploy -o BatchMode=yes -o LogLevel=ERROR -b sftp_oldprune "$SF_TARGET"
+          echo "✓ Pruned old-release ISOs:$PRUNE_DIRS"
+
       - name: Pin Default Download on SourceForge
         if: >-
           steps.version.outputs.is_nightly == 'false' &&
