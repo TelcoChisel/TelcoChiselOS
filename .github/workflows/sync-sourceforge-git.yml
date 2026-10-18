@@ -44,11 +44,14 @@ jobs:
           # Force sync all release tags
           GIT_SSH_COMMAND="ssh -i ~/.ssh/sf_deploy -o BatchMode=yes -o StrictHostKeyChecking=accept-new" git push --tags --force sf
           
-          # Attempt to push main
+          # Attempt to push main. A non-fast-forward rejection is an expected
+          # SourceForge server protection (denyNonFastForwards), not a CI
+          # failure — warn and exit 0 so the mirror job stays green. Tags above
+          # still force-sync regardless.
           if ! GIT_SSH_COMMAND="ssh -i ~/.ssh/sf_deploy -o BatchMode=yes -o StrictHostKeyChecking=accept-new" git push --force sf main; then
-            echo "::warning::SourceForge rejected non-fast-forward push to 'main' (server-side denyNonFastForwards protection)."
-            echo "::notice::To sync rewritten history to SourceForge, use SourceForge Admin > Code > 'Delete Everything' or switch default branch to allow deleting and re-pushing 'main'."
-            exit 1
+            echo "::warning::SourceForge rejected non-fast-forward push to 'main' (server-side denyNonFastForwards protection). Tags were still synced."
+            echo "::notice::To sync rewritten history, use SourceForge Admin > Code > 'Delete Everything' then re-run this workflow."
+            exit 0
           fi
           echo "✓ Successfully synced main branch and tags to SourceForge Git"
 

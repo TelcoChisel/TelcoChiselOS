@@ -83,7 +83,9 @@ jobs:
           if [ -f VERSION ]; then
             VER=$(head -n 1 VERSION | tr -d '[:space:]')
           else
-            VER="2026.1"
+            # VERSION should always exist (release.yml writes it); fall back to
+            # the newest git tag rather than a stale hardcoded value.
+            VER=$(git describe --tags --abbrev=0 2>/dev/null | sed 's/^v//' || echo "latest")
           fi
           VER="${VER#v}"
           echo "version=$VER" >> "$GITHUB_OUTPUT"
