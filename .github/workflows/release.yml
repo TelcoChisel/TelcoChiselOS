@@ -261,7 +261,10 @@ jobs:
           APT_PROXY: http://localhost:3142
           USE_CCACHE: "1"
           CCACHE_DIR: /root/.ccache
-          SQUASHFS_LEVEL: "3"
+          # Max zstd compression for published releases — keeps the ISO under
+          # the 5 GB SourceForge budget. Slower, but well within the 180-min
+          # timeout. Nightlies/CI still use the fast level via their own env.
+          SQUASHFS_LEVEL: "19"
           ISO_VERSION: ${{ steps.version.outputs.version }}
           BUILD_FLAVOR: ${{ steps.version.outputs.flavor }}
           TELCOSEC_ALLOW_TOOL_FAILURES: ${{ steps.version.outputs.allow_tool_failures == 'true' && '1' || '0' }}

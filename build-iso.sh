@@ -599,6 +599,31 @@ fi
 # Remove conda package cache and tarballs (pkgs/ is the biggest hidden cost)
 rm -rf /opt/telcosec/miniconda/pkgs/ 2>/dev/null || true
 
+# ── Conda env runtime-trim (ISO-size reduction, target <5 GB) ───────────────
+# The telcosec-sdr env (GNU Radio, gqrx, SoapySDR, numpy, boost) ships dev
+# artifacts with no runtime value: static libs, C/C++ headers, test suites,
+# CMake/pkg-config metadata, bundled docs/examples, and man pages. Removing
+# them does not affect running the SDR tools. Scope strictly to the conda
+# tree so nothing system-wide is touched.
+_CONDA_ENVS=/opt/telcosec/miniconda/envs
+if [ -d "$_CONDA_ENVS" ]; then
+  find "$_CONDA_ENVS" -type f -name '*.a' -delete 2>/dev/null || true
+  # NOTE: include/ is intentionally NOT removed — GNU Radio OOT module builds
+  # and SWIG/pybind flows in the live session may need the headers. Static
+  # libs, tests, docs and debug symbols below are safe runtime-dead weight.
+  # Python test suites inside the env's site-packages (numpy/scipy/etc.).
+  find "$_CONDA_ENVS" -type d \( -name tests -o -name test \) \
+    -path '*/site-packages/*' -prune -exec rm -rf {} + 2>/dev/null || true
+  # Bundled docs / examples / man pages inside the env share tree.
+  rm -rf "$_CONDA_ENVS"/*/share/man "$_CONDA_ENVS"/*/share/doc \
+         "$_CONDA_ENVS"/*/share/gtk-doc "$_CONDA_ENVS"/*/share/info 2>/dev/null || true
+  # Strip the env's ELF binaries and shared libs (biggest single win after .a).
+  find "$_CONDA_ENVS" -type f \( -name '*.so' -o -name '*.so.*' \) \
+    -exec strip --strip-unneeded {} + 2>/dev/null || true
+  find "$_CONDA_ENVS"/*/bin -type f -executable \
+    -exec strip --strip-unneeded {} + 2>/dev/null || true
+fi
+
 # ── Git history (no runtime value) ────────────────────────────────────────
 find /opt/telcosec     -name '.git'       -type d -exec rm -rf {} + 2>/dev/null || true
 
