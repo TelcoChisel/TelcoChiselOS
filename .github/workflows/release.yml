@@ -372,23 +372,51 @@ jobs:
         run: |
           cat << EOF > README.md
           # TelcoChisel $VERSION
-          
+
+          Advanced 5G/4G cellular security & telecom auditing live OS by TelcoSec.
+
           | Field | Value |
           |-------|-------|
           | **Build** | \`$VERSION\` |
           | **Date** | $DATE |
+          | **ISO** | \`$ISO\` |
           | **ISO Size** | $SIZE |
           | **SHA-256** | \`$SHA256\` |
-          
+          | **Base** | Ubuntu 24.04 LTS (Noble Numbat) |
+
           ### ⬇ Download
-          Download the \`.iso\` file directly from this directory. No extraction or reassembly is needed.
-          
-          > **Live boot credentials:** \`telcosec:telcosec\`
-          
+          Download \`$ISO\` directly from this folder — it is a single, ready-to-write
+          image. No extraction or reassembly is needed. (Split \`.part-*\` chunks exist
+          only on the GitHub mirror, for GitHub's 2 GB per-asset limit.)
+
+          Or always grab the current stable release via the one-click link:
+          **https://sourceforge.net/projects/telcochisel/files/latest/download**
+
+          ### Verify the download
+          \`\`\`bash
+          # Linux / macOS
+          sha256sum -c $ISO.sha256
+          # Windows PowerShell
+          Get-FileHash .\\$ISO -Algorithm SHA256
+          \`\`\`
+
+          ### Write to USB
+          \`\`\`bash
+          lsblk                                        # find the target USB (e.g. /dev/sdX)
+          sudo dd if=$ISO of=/dev/sdX bs=4M status=progress conv=fsync
+          \`\`\`
+          Or use BalenaEtcher / Rufus (DD Image mode). Boot via UEFI (Secure Boot
+          disabled) or Legacy BIOS.
+
+          > **Live boot credentials:** \`telcosec\` / \`telcosec\`
+
           ### Changes since last release
           \`\`\`text
           $CHANGELOG
           \`\`\`
+
+          ---
+          Docs: https://telcochisel.com · GitHub: https://github.com/TelcoChisel/TelcoChiselOS
           EOF
 
       # ── SourceForge FRS ──────────────────────────────────────────────────────
@@ -423,6 +451,9 @@ jobs:
         env:
           SF_SSH_KEY: ${{ secrets.SF_SSH_KEY }}
           SF_USER: ${{ secrets.SF_USER }}
+          VERSION: ${{ steps.version.outputs.version }}
+          DATE:    ${{ steps.version.outputs.date }}
+          SIZE:    ${{ steps.meta.outputs.size }}
         run: |
           SF_ROOT="/home/frs/project/$SF_PROJECT"
           SF_TARGET="$SF_USER,$SF_PROJECT@$SF_HOST"
@@ -435,9 +466,15 @@ jobs:
 
           # The Files-root landing page is cosmetic — never let a missing or
           # failed README upload abort the actual ISO publish below.
+          # Substitute the live version/size/date tokens into the in-repo
+          # template so the landing page never goes stale between releases.
           if [ -f docs/SOURCEFORGE_FILES_README.md ]; then
+            sed -e "s|@VERSION@|${VERSION:-latest}|g" \
+                -e "s|@SIZE@|${SIZE:-see folder}|g" \
+                -e "s|@DATE@|${DATE:-latest release}|g" \
+              docs/SOURCEFORGE_FILES_README.md > /tmp/sf_root_readme.md
             rsync -av -e "$SF_SSH" \
-              docs/SOURCEFORGE_FILES_README.md \
+              /tmp/sf_root_readme.md \
               "$SF_TARGET:$SF_ROOT/README.md" \
               && echo "✓ SF root README → https://sourceforge.net/projects/$SF_PROJECT/files/" \
               || echo "::warning::SF root README upload failed (non-fatal)"
