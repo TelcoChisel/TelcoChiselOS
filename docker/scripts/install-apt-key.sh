@@ -6,7 +6,7 @@ set -euo pipefail
 TELCOSEC_URL="${TELCOSEC_URL:-https://meta.telcochisel.com}"
 TELCOSEC_KEY="/etc/apt/keyrings/telcochisel-archive-keyring.asc"
 TELCOSEC_SOURCES="/etc/apt/sources.list.d/telcochisel.sources"
-TELCOSEC_FPR="6326A34C15FEF05FBD63518B4325182E2F0D9DB9"
+TELCOSEC_FPR="3DDEADD34827571266C41601C3BB61613B110128"
 
 mkdir -p /etc/apt/keyrings /etc/apt/sources.list.d
 

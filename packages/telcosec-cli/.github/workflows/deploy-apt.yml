@@ -79,7 +79,7 @@ jobs:
           cp conf/distributions public/conf/
 
           # Export public armored GPG key for client enrollment
-          gpg --armor --export "repo@telcosec.net" > public/public.gpg
+          gpg --armor --export "repo@telcochisel.com" > public/public.gpg
           cp public/public.gpg public/telcosec.gpg
 
           # Ingest both amd64 and arm64 packages into noble suite

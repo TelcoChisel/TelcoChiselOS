@@ -21,7 +21,7 @@ const (
 	LegacyKeyring   = "/etc/apt/trusted.gpg.d/telcosec.gpg"
 	// OfficialRepoKeyFingerprint must match scripts/install-telcochisel-repo.sh
 	// and builder/scripts/00-install-all-packages.sh (TELCOSEC_FPR).
-	OfficialRepoKeyFingerprint = "6326A34C15FEF05FBD63518B4325182E2F0D9DB9"
+	OfficialRepoKeyFingerprint = "3DDEADD34827571266C41601C3BB61613B110128"
 	AptPreferences             = "/etc/apt/preferences.d/99-telcochisel.pref"
 )
 

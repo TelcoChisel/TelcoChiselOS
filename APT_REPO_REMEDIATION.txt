@@ -1,0 +1,164 @@
+===============================================================================
+ TelcoChisel APT Repository — Remediation Runbook
+ Created: 2026-10-19
+ Context: meta.telcosec.net -> meta.telcochisel.com migration + GPG key mismatch
+===============================================================================
+
+SUMMARY OF WHAT'S WRONG
+-----------------------
+1. CRITICAL — GPG signing key mismatch:
+     - Clients verify against fingerprint : 6326A34C15FEF05FBD63518B4325182E2F0D9DB9
+       (hardcoded as TELCOSEC_FPR in 00-install-all-packages.sh +
+        install-telcochisel-repo.sh; created 2026-09-04)
+     - CI now signs/exports with           : 23E7000129FBAF1FA9569A6049E78D088201DB78
+       (a NEW key generated 2026-10-19, same UID "repo@telcosec.net")
+     - The LIVE site currently serves the CORRECT 6326A34C key (last real deploy
+       was 2026-09-04), so enrollment works TODAY.
+     - Any fresh deploy would overwrite public.gpg with 23E7000 and BREAK every
+       client's fingerprint check -> apt update / enrollment fails for everyone.
+
+2. Deploy step SKIPS — the TelcoChisel/telcosec-cli repo has NO secrets, so
+   CLOUDFLARE_API_TOKEN is absent and the "Deploy to Cloudflare Pages" step is
+   skipped. (This is currently PROTECTING you from publishing the wrong key.)
+
+3. Content is stale — live repo files are from 2026-09-04 (consequence of #2).
+
+CLOUDFLARE FACTS (verified via API)
+-----------------------------------
+  Account ID          : a5572864478db6bcd543cd4f67afb393   ("TelcoSec Account")
+  Pages project       : telcochisel-repos
+  Custom domains       : meta.telcochisel.com (active, verified),
+                         meta.telcosec.net (active, verified)
+  DNS (telcochisel.com): CNAME meta -> telcochisel-repos.pages.dev (proxied)  [OK]
+  Live key served      : 6326A34C...  [CORRECT]
+  Decision             : 6326A34C is AUTHORITATIVE. Fix CI to use it.
+
+DO NOT run `gh workflow run deploy-apt.yml` or deploy any artifact until the
+GPG_PRIVATE_KEY secret is reconciled. The current stale-but-correct live site is
+the safe state.
+
+===============================================================================
+ STEP 1 — Recover / confirm the authoritative private key (6326A34C)
+===============================================================================
+# The private key is NOT in the repo. Find it in your local GPG keyring or your
+# secrets backup. Check your local keyring first:
+
+  gpg --list-secret-keys --keyid-format=long
+  # Look for a key whose fingerprint is 6326A34C15FEF05FBD63518B4325182E2F0D9DB9
+
+# If present locally, export the ASCII-armored PRIVATE key to a file:
+
+  gpg --armor --export-secret-keys 6326A34C15FEF05FBD63518B4325182E2F0D9DB9 > telcochisel-signing-6326A34C.asc
+
+# Verify the exported file is the right key:
+
+  gpg --show-keys telcochisel-signing-6326A34C.asc | grep -A1 pub
+  # fingerprint line MUST be 6326A34C15FEF05FBD63518B4325182E2F0D9DB9
+
+# IF YOU DO NOT HAVE the 6326A34C private key anywhere:
+#   You cannot re-sign with it. Then the only safe path is to adopt a new key
+#   and update clients (see STEP 5 ALTERNATIVE). Do not guess.
+
+===============================================================================
+ STEP 2 — Set the correct secrets on the telcosec-cli repo
+===============================================================================
+# Set the authoritative private key as GPG_PRIVATE_KEY (overwrites the bad one):
+
+  gh secret set GPG_PRIVATE_KEY --repo TelcoChisel/telcosec-cli < telcochisel-signing-6326A34C.asc
+
+# Set the Cloudflare deploy credentials (so the deploy step stops skipping):
+#  - CLOUDFLARE_API_TOKEN must be a token with "Cloudflare Pages: Edit" on the
+#    TelcoSec account. Create it at:
+#    https://dash.cloudflare.com/profile/api-tokens  (template: "Edit Cloudflare Workers"
+#    or a custom token scoped to Account > Cloudflare Pages: Edit)
+
+  gh secret set CLOUDFLARE_API_TOKEN  --repo TelcoChisel/telcosec-cli
+  # (paste the token when prompted)
+
+  gh secret set CLOUDFLARE_ACCOUNT_ID --repo TelcoChisel/telcosec-cli --body a5572864478db6bcd543cd4f67afb393
+
+# Confirm the three secrets now exist:
+
+  gh secret list --repo TelcoChisel/telcosec-cli
+
+===============================================================================
+ STEP 3 — Prevent silent re-keying (defensive; recommended)
+===============================================================================
+# ci-setup-gpg.sh currently generates a THROWAWAY key when GPG_PRIVATE_KEY is
+# empty/invalid — that is how 23E7000 got created. Make it FAIL LOUDLY instead
+# so a missing secret can never silently re-key the repo again.
+# (Claude can patch this for you via API on request — see note at bottom.)
+# Manual check of the current behavior:
+
+  gh api repos/TelcoChisel/telcosec-cli/contents/scripts/ci-setup-gpg.sh \
+    -q '.content' | base64 -d | sed -n '1,60p'
+
+===============================================================================
+ STEP 4 — Trigger the deploy and VERIFY the key before trusting it
+===============================================================================
+# Re-run the deploy workflow on telcosec-cli:
+
+  gh workflow run deploy-apt.yml --repo TelcoChisel/telcosec-cli
+
+# Watch it to completion:
+
+  gh run watch "$(gh run list --repo TelcoChisel/telcosec-cli --workflow deploy-apt.yml --limit 1 --json databaseId -q '.[0].databaseId')" --repo TelcoChisel/telcosec-cli --exit-status
+
+# CRITICAL verification — the deployed public key MUST be 6326A34C:
+# (force IPv4 to avoid local IPv6-only resolver quirks)
+
+  curl -fsSL --resolve meta.telcochisel.com:443:104.21.58.91 \
+    https://meta.telcochisel.com/public.gpg -o /tmp/served.gpg
+  gpg --show-keys --with-colons /tmp/served.gpg | awk -F: '$1=="fpr"{print $10; exit}'
+  # MUST print: 6326A34C15FEF05FBD63518B4325182E2F0D9DB9
+  # If it prints 23E7000... STOP — the wrong key was deployed; fix GPG_PRIVATE_KEY.
+
+# Also verify a clean end-to-end enrollment on a test Ubuntu 24.04 host/VM:
+
+  sudo install -m 0755 -d /etc/apt/keyrings
+  curl -fsSL https://meta.telcochisel.com/public.gpg | sudo tee /etc/apt/keyrings/telcochisel-archive-keyring.asc >/dev/null
+  gpg --show-keys /etc/apt/keyrings/telcochisel-archive-keyring.asc | grep 6326A34C
+  sudo tee /etc/apt/sources.list.d/telcochisel.sources <<'EOF'
+Types: deb
+URIs: https://meta.telcochisel.com
+Suites: noble
+Components: main
+Signed-By: /etc/apt/keyrings/telcochisel-archive-keyring.asc
+EOF
+  sudo apt update
+  sudo apt install -y telcochisel-meta-full   # or: telcosec-cli
+
+===============================================================================
+ STEP 5 ALTERNATIVE — ONLY if the 6326A34C private key is unrecoverable
+===============================================================================
+# If you genuinely cannot find the 6326A34C private key, adopt the new key
+# (23E7000) as authoritative and update EVERY client reference, then redeploy.
+# In THIS repo (TelcoChisel/TelcoChiselOS), replace the fingerprint everywhere:
+
+  cd /m/TelcoChiselOS
+  git checkout -b chore/rekey-apt
+  grep -rl "6326A34C15FEF05FBD63518B4325182E2F0D9DB9" . \
+    | grep -vE "node_modules|/\.git/|\.claude|APT_REPO_REMEDIATION.txt" \
+    | xargs sed -i 's/6326A34C15FEF05FBD63518B4325182E2F0D9DB9/23E7000129FBAF1FA9569A6049E78D088201DB78/g'
+  grep -rn "23E7000129FBAF1FA9569A6049E78D088201DB78" builder/scripts/00-install-all-packages.sh scripts/install-telcochisel-repo.sh
+  # commit, PR, merge — THEN deploy with the 23E7000 key.
+  # NOTE: existing installs that trusted 6326A34C will still need the new key
+  # pushed to them; a re-key is disruptive. Prefer recovering 6326A34C.
+
+===============================================================================
+ REFERENCE — what is already done (no action needed)
+===============================================================================
+  - TelcoChisel/TelcoChiselOS main: domain migrated to meta.telcochisel.com
+    (commit 13f403d, PR #14). 22 files: URLs, APT pinning origin, Go CLI + test.
+  - TelcoChisel/telcosec-cli: deploy-apt.yml CNAME -> meta.telcochisel.com
+    (commit be1c0ddd).
+  - Cloudflare: domain + Pages custom domain already active & verified.
+  - Fingerprint 6326A34C is UNCHANGED in client config (correct — do not touch
+    unless taking STEP 5 ALTERNATIVE).
+
+===============================================================================
+ OPTIONAL — have Claude patch ci-setup-gpg.sh to fail-loud (Step 3)
+===============================================================================
+  Ask: "patch ci-setup-gpg.sh to hard-fail when GPG_PRIVATE_KEY is missing"
+  (done via GitHub API on the telcosec-cli repo; touches no secret).
+===============================================================================

@@ -147,7 +147,7 @@ fi
 TELCOSEC_KEY=/etc/apt/keyrings/telcochisel-archive-keyring.asc
 TELCOSEC_SOURCES=/etc/apt/sources.list.d/telcochisel.sources
 TELCOSEC_URL="https://meta.telcochisel.com"
-TELCOSEC_FPR="6326A34C15FEF05FBD63518B4325182E2F0D9DB9"
+TELCOSEC_FPR="3DDEADD34827571266C41601C3BB61613B110128"
 
 mkdir -p /etc/apt/keyrings
 if curl -fsSL "${TELCOSEC_URL}/public.gpg" -o "$TELCOSEC_KEY" 2>/dev/null && [ -s "$TELCOSEC_KEY" ] && \
