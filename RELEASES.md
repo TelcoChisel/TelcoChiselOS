@@ -91,7 +91,7 @@ Every release build generates a standard quartet of integrity assets:
 Releases are triggered automatically via `.github/workflows/release.yml`:
 
 1. **Tag Push**: `git tag v2026.2 && git push origin v2026.2`
-2. **Workflow Dispatch**: Triggers manual bump (`2026.1`, `2026.2`, `2026.3`, `2026.4`, or `nightly`) with flavor selector (`full` / `lite`).
+2. **Workflow Dispatch**: Triggers manual date-based bump (`point` -> YYYY.Q.P+1, `quarter` -> next quarter with year rollover, or `nightly`) with flavor selector (`full` / `lite`).
 3. **Multi-Mirror Synchronization**:
    - Pushes release assets and checksums to GitHub Releases.
    - Synchronizes ISO files and README documentation to SourceForge (`frs.sourceforge.net`).
