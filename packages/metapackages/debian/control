@@ -79,45 +79,72 @@ Description: TelcoChisel Radio Frequency & DSP Analysis Metapackage
 Package: telcochisel-tools-2g-3g
 Architecture: all
 Depends: ${misc:Depends},
- telcochisel-hardware-sdr
+ telcochisel-hardware-sdr,
+ telcosec-cli,
+ build-essential,
+ cmake,
+ git
 Recommends: telcochisel-tools-sdr
 Description: TelcoChisel 2G & 3G Cellular Auditing Metapackage
- GSM, GPRS, EDGE, and UMTS cellular network auditing infrastructure,
- base station software (Osmocom stack, OpenBTS, YateBTS), and frequency scanners.
+ Prepares a 2G/3G (GSM/GPRS/EDGE/UMTS) auditing environment: SDR hardware
+ access, build tooling, and the telcosec-cli helper. The base-station stacks
+ (Osmocom, OpenBTS, YateBTS) and frequency scanners are compiled on first run
+ via their setup helpers — e.g. "sudo yatebts-install", "sudo openbts-install"
+ — because they are not available as Ubuntu packages.
 
 Package: telcochisel-tools-4g
 Architecture: all
 Depends: ${misc:Depends},
  telcochisel-hardware-sdr,
- wireshark
+ telcosec-cli,
+ wireshark,
+ build-essential,
+ cmake,
+ git
 Recommends: telcochisel-tools-sdr
 Description: TelcoChisel 4G LTE RAN & EPC Auditing Metapackage
- 4G LTE eNodeB simulation, User Equipment stacks (srsRAN 4G, srsUE),
- LTE downlink sniffers (LTESniffer), and LTE Evolved Packet Core testing.
+ Prepares a 4G LTE RAN/EPC auditing environment: SDR hardware access, Wireshark,
+ build tooling, and the telcosec-cli helper. srsRAN 4G/srsUE, LTESniffer,
+ LTE-CellScanner and the EPC stack are compiled on first run via their setup
+ helpers ("sudo srsran-install", "sudo ltesniffer-install", ...) — they are not
+ available as Ubuntu packages.
 
 Package: telcochisel-tools-5g
 Architecture: all
 Depends: ${misc:Depends},
  telcochisel-hardware-sdr,
+ telcosec-cli,
  wireshark,
  python3-yaml,
- python3-scapy
+ python3-scapy,
+ build-essential,
+ cmake,
+ git
 Recommends: telcochisel-tools-4g
 Description: TelcoChisel 5G Standalone Core & RAN Metapackage
- 5G Standalone (SA) Core Network (Open5GS), gNodeB & UE simulation (UERANSIM),
- 5G SBI HTTP/2 proxying (mitmproxy), and baseband fuzzing (5Ghoul).
+ Prepares a 5G SA core & RAN environment: SDR hardware access, Wireshark, the
+ Python RAN tooling, build tooling, and the telcosec-cli helper. Open5GS (5G SA
+ core), UERANSIM (gNB/UE), and the 5Ghoul fuzzer are compiled/installed on first
+ run via their setup helpers ("sudo open5gs-install", "sudo 5ghoul-install", ...)
+ — they are not available as Ubuntu packages.
 
 Package: telcochisel-tools-sim
 Architecture: all
 Depends: ${misc:Depends},
+ telcosec-cli,
  pcscd,
  pcsc-tools,
  opensc,
  python3-pyscard,
- python3-pycryptodome
+ python3-pycryptodome,
+ python3-pip,
+ git
 Description: TelcoChisel SIM & Smartcard Security Metapackage
- SIM, USIM, ISIM, and eSIM auditing suite, APDU sniffing and emulation
- (pySim-shell, Osmocom SIMtrace 2, lpac eSIM assistant, SIMurai, SIMtester).
+ SIM/USIM/ISIM/eSIM auditing foundation: the PC/SC daemon and tools, OpenSC,
+ and the pyscard/pycryptodome Python stack for APDU work. The TelcoSec-specific
+ utilities — pySim-shell, Osmocom SIMtrace 2, lpac eSIM assistant, SIMurai and
+ SIMtester — are installed on first run via their setup helpers (Python/Git
+ projects, not Ubuntu packages).
 
 Package: telcochisel-tools-pstn-adsl
 Architecture: all
@@ -133,12 +160,18 @@ Description: TelcoChisel Wireline, VoIP & Broadband Security Metapackage
 Package: telcochisel-tools-ue
 Architecture: all
 Depends: ${misc:Depends},
+ telcosec-cli,
  adb,
  fastboot,
- python3-serial
+ python3-serial,
+ python3-pip,
+ git
 Description: TelcoChisel User Equipment & Baseband Research Metapackage
- Cellular handset diagnostics, modem DIAG trace logging (QCSuper, SCAT),
- baseband firmware reverse engineering (FirmWire), and device flashing (MTKClient, EDL).
+ Prepares a UE/baseband research environment: ADB/Fastboot device access, serial
+ tooling, and the telcosec-cli helper. The analysis suites — QCSuper and SCAT
+ (DIAG trace logging), FirmWire (baseband fuzzing), MTKClient and EDL (flashing)
+ — are Python/Git projects installed on first run via their setup helpers, not
+ Ubuntu packages.
 
 Package: telcochisel-meta-full
 Architecture: all
