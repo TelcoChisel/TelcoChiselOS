@@ -31,15 +31,15 @@ The official standalone operator CLI and telemetry suite for telecom security en
 
 ### Official APT Repository Installation (Ubuntu 24.04 / 22.04 & Debian 12)
 
-Install `telcosec-cli` via the official Cloudflare Pages-backed APT edge repository (`meta.telcosec.net`):
+Install `telcosec-cli` via the official Cloudflare Pages-backed APT edge repository (`meta.telcochisel.com`):
 
 ```bash
 # 1. Install TelcoSec APT keyring
 sudo mkdir -p /etc/apt/keyrings
-curl -fsSL https://meta.telcosec.net/public.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/telcosec.gpg
+curl -fsSL https://meta.telcochisel.com/public.gpg | sudo gpg --dearmor -o /etc/apt/keyrings/telcosec.gpg
 
 # 2. Add TelcoChisel repository source
-echo "deb [signed-by=/etc/apt/keyrings/telcosec.gpg] https://meta.telcosec.net noble main" | sudo tee /etc/apt/sources.list.d/telcosec.list
+echo "deb [signed-by=/etc/apt/keyrings/telcosec.gpg] https://meta.telcochisel.com noble main" | sudo tee /etc/apt/sources.list.d/telcosec.list
 
 # 3. Update package index and install telcosec-cli
 sudo apt-get update && sudo apt-get install -y telcosec-cli
@@ -119,7 +119,7 @@ sudo make install
 | `telcosec 10g` | `status`, `tune <iface>`, `setup <iface> [preset]`, `probe [ip]` | 10Gbps SFP+ interface optimization for Ettus USRP X310/N310 transceivers. |
 | `telcosec firmware` | | Inspect local offline FPGA bitstream caches for BladeRF (`.rbf`) and USRP (`.bin`). |
 | `telcosec profile` | `lab`, `field`, `status` | Switch operational profiles (Lab Mode vs Field Mode). |
-| `telcosec pkg` | `list [--json]`, `info <alias>`, `install <alias>`, `remove <alias>`, `check`, `repo [status\|enable]` | Official 10-tier modular metapackage manager connecting to meta.telcosec.net. |
+| `telcosec pkg` | `list [--json]`, `info <alias>`, `install <alias>`, `remove <alias>`, `check`, `repo [status\|enable]` | Official 10-tier modular metapackage manager connecting to meta.telcochisel.com. |
 | `telcosec sim` | `status`, `readers`, `atr [hex]`, `trace [list\|sniff]`, `lpac`, `shell` | Smartcard, SIM & eSIM auditing suite (PC/SC, ISO 7816-3 ATR decoder, SIMtrace 2, lpac). |
 | `telcosec 5g-sa` | `start`, `stop`, `status`, `add-sub` | Manage local Open5GS 5G Standalone core network and provision test SIMs. |
 | `telcosec scan` | `sctp`, `sip`, `asleap` | Launch telecom signaling assessment wizards and scanners. |

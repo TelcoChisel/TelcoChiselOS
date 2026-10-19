@@ -57,7 +57,7 @@ flowchart TD
     subgraph L3["3. Unified Operator Architecture"]
         TELCOSEC["telcosec<br/>(Hardware Probe, 5G Core Lifecycle, Guided Scans, Diagnostic Doctor)"]
         TELCOSDR["telcosec-sdr<br/>(Driver Stacks, USBFS Allocation, 10GbE Tuning, Offline FPGA Bitstreams)"]
-        TELCOPKG["telcosec-pkg<br/>(11-Tier Modular Metapackage Client via meta.telcosec.net)"]
+        TELCOPKG["telcosec-pkg<br/>(11-Tier Modular Metapackage Client via meta.telcochisel.com)"]
     end
 
     subgraph L4["4. 100 Pre-Configured Telecom Instruments (10 Domains)"]
@@ -193,7 +193,7 @@ TelcoChisel OS is distributed across four distinct deployment targets to accommo
 
 ### 1. Live ISO (Physical Hardware)
 * **Flagship Field Edition** (`TelcoChisel-2026.2-amd64.iso`, ~5.5 GB): Fully self-contained, air-gapped research lab with all 100 tools pre-compiled, offline UHD FPGA bitstreams, and Conda SDR environment.
-* **Modular Lite Edition** (`TelcoChisel-2026.2-lite-amd64.iso`, ~1.8 GB): Base desktop with core networking and the `telcosec-pkg` client to pull domain suites on demand from `meta.telcosec.net`.
+* **Modular Lite Edition** (`TelcoChisel-2026.2-lite-amd64.iso`, ~1.8 GB): Base desktop with core networking and the `telcosec-pkg` client to pull domain suites on demand from `meta.telcochisel.com`.
 * **Four Boot Modes**:
   1. *TelcoChisel Live (Default)*: Low-latency desktop with auto-configured hardware access.
   2. *Encrypted Persistence*: AES-XTS LUKS-encrypted `casper-rw` partition for secure evidence and PCAP storage.

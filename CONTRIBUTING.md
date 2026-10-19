@@ -43,7 +43,7 @@ TelcoChiselOS/
 ├── data/
 │   └── tools.json             # Canonical single source of truth for the 100-tool catalog
 ├── packages/
-│   ├── metapackages/          # Debian metapackages (telcochisel-*) → meta.telcosec.net
+│   ├── metapackages/          # Debian metapackages (telcochisel-*) → meta.telcochisel.com
 │   ├── telcosec-cli/          # Go operator CLI → `/usr/local/libexec/telcosec`
 │   │                          # PATH: bash wrapper at `/usr/local/bin/telcosec`
 │   │                          # Explicit bash: `telcosec.bash` or TELCOSEC_FORCE_BASH=1

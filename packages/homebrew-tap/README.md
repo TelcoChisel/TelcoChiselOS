@@ -100,7 +100,7 @@ Formula updates are automated via GitHub Actions:
 ## Documentation & Upstream Repositories
 
 - **TelcoChisel OS Documentation Portal**: [https://telcochisel.com](https://telcochisel.com)
-- **Official Metapackage CDN**: [https://meta.telcosec.net](https://meta.telcosec.net)
+- **Official Metapackage CDN**: [https://meta.telcochisel.com](https://meta.telcochisel.com)
 - **Operator CLI Source Code**: [https://github.com/TelcoChisel/telcosec-cli](https://github.com/TelcoChisel/telcosec-cli)
 - **TelcoChisel OS Distribution**: [https://github.com/TelcoChisel/TelcoChiselOS](https://github.com/TelcoChisel/TelcoChiselOS)
 - **TelcoChisel Organization**: [https://github.com/TelcoChisel](https://github.com/TelcoChisel)

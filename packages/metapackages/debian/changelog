@@ -32,6 +32,6 @@ telcochisel-metapackages (2026.1-1) noble; urgency=medium
 
   * Official release of TelcoChisel Modular Debian Metapackages for Ubuntu 24.04 LTS.
   * Standardized 10 metapackages covering 100 specialized telecom security instruments.
-  * Full integration with telcosec-pkg CLI client and meta.telcosec.net APT repository.
+  * Full integration with telcosec-pkg CLI client and meta.telcochisel.com APT repository.
 
  -- TelcoChisel Engineering Team <ops@telcochisel.com>  Tue, 22 Sep 2026 12:00:00 +0000

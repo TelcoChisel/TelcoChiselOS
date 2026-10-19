@@ -103,7 +103,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   - Upgraded to **Ubuntu 24.04 LTS (Noble Numbat)** base with real-time `linux-image-lowlatency` (1000Hz timer, preemptible) as the default boot kernel.
   - Dual-kernel fallback architecture (`linux-image-generic` alongside low-latency kernel).
   - SCTP kernel tuning, unlimited `RLIMIT_MEMLOCK`, and `SCHED_RR` real-time scheduling for drop-free SDR streaming.
-- **Debian Metapackages (`meta.telcosec.net`)**:
+- **Debian Metapackages (`meta.telcochisel.com`)**:
   - Introduced 8 modular domain packages in `debian/control`: `telcochisel-base`, `telcochisel-sdr`, `telcochisel-5g-sa`, `telcochisel-4g-lte`, `telcochisel-sim`, `telcochisel-baseband`, `telcochisel-wireline`, and `telcochisel-all`.
   - Built custom CLI package manager `telcosec-pkg` with interactive curses menu, search, installation, and dependency management.
 - **Hardware & Driver Stacks**:

@@ -213,7 +213,7 @@ PKGS_ADVANCED=(
   libncurses-dev cargo libcrypt-dev libqt5charts5-dev
 )
 
-# ─── TelcoChisel Official Metapackages (meta.telcosec.net) ───────────────────
+# ─── TelcoChisel Official Metapackages (meta.telcochisel.com) ───────────────────
 PKGS_TELCOCHISEL_META=(
   telcochisel-base
   telcochisel-hardware-sdr
@@ -230,7 +230,7 @@ PKGS_TELCOCHISEL_META=(
 # ─── Modular Lite Edition Base Packages (~1.8 GB ISO) ────────────────────────
 # Minimal footprint: XFCE desktop, Low-Latency kernel, Wireshark,
 # Calamares installer, Python runtime, and telcosec-pkg client to pull
-# modular domain suites (SDR, 5G, SIM, UE, etc.) on-demand from meta.telcosec.net.
+# modular domain suites (SDR, 5G, SIM, UE, etc.) on-demand from meta.telcochisel.com.
 PKGS_LITE_BASE=(
   "${PKGS_BASE[@]}"
   wireshark tshark tcpdump

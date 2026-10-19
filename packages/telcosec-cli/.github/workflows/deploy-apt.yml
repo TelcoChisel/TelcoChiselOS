@@ -94,9 +94,9 @@ jobs:
           rm -rf public/conf public/db
 
           # Set custom domain CNAME for Cloudflare Pages
-          echo "meta.telcosec.net" > public/CNAME
+          echo "meta.telcochisel.com" > public/CNAME
 
-      - name: Deploy to Cloudflare Pages (meta.telcosec.net)
+      - name: Deploy to Cloudflare Pages (meta.telcochisel.com)
         if: env.CF_API_TOKEN != '' && (github.event_name != 'workflow_dispatch' || inputs.dry_run != true)
         uses: cloudflare/wrangler-action@v3
         with:

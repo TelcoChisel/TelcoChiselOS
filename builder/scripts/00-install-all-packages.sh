@@ -142,11 +142,11 @@ else
   rm -f "$KISMET_KEY" /etc/apt/sources.list.d/kismet.list
 fi
 
-# TelcoChisel Official APT Repository (Cloudflare Edge CDN: meta.telcosec.net)
+# TelcoChisel Official APT Repository (Cloudflare Edge CDN: meta.telcochisel.com)
 # Distributes official metapackages, SDR hardware rules, and kernel tuning.
 TELCOSEC_KEY=/etc/apt/keyrings/telcochisel-archive-keyring.asc
 TELCOSEC_SOURCES=/etc/apt/sources.list.d/telcochisel.sources
-TELCOSEC_URL="https://meta.telcosec.net"
+TELCOSEC_URL="https://meta.telcochisel.com"
 TELCOSEC_FPR="6326A34C15FEF05FBD63518B4325182E2F0D9DB9"
 
 mkdir -p /etc/apt/keyrings
@@ -155,12 +155,12 @@ if curl -fsSL "${TELCOSEC_URL}/public.gpg" -o "$TELCOSEC_KEY" 2>/dev/null && [ -
   chmod 0644 "$TELCOSEC_KEY"
   cat > "$TELCOSEC_SOURCES" << 'EOF'
 Types: deb
-URIs: https://meta.telcosec.net
+URIs: https://meta.telcochisel.com
 Suites: noble
 Components: main
 Signed-By: /etc/apt/keyrings/telcochisel-archive-keyring.asc
 EOF
-  echo "  TelcoChisel official APT repo added (meta.telcosec.net, fingerprint verified)."
+  echo "  TelcoChisel official APT repo added (meta.telcochisel.com, fingerprint verified)."
   TELCOSEC_REPO_ENABLED=1
 else
   echo "  WARNING: TelcoChisel custom APT repo not reachable or key verification failed — continuing with upstream/source builds."

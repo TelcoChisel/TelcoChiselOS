@@ -319,7 +319,7 @@ Rectangle {
                     }
 
                     Text {
-                        text: "telcosec-pkg CLI • meta.telcosec.net • 10 Metapackages • telcochisel.com"
+                        text: "telcosec-pkg CLI • meta.telcochisel.com • 10 Metapackages • telcochisel.com"
                         color: "#e6edf3"
                         font.pixelSize: 13
                         Layout.alignment: Qt.AlignHCenter

@@ -55,7 +55,7 @@ graph TD
 ### 2. Modular Lite Edition (`lite`)
 - **Artifact**: `TelcoChisel-2026.2-lite-amd64.iso` (~1.8 GB)
 - **Characteristics**: Streamlined footprint for fast deployment and cloud instances.
-- **Includes**: Base XFCE desktop, Wireshark, network analysis tools, and `telcosec-pkg` client to pull domain suites on demand from `meta.telcosec.net`.
+- **Includes**: Base XFCE desktop, Wireshark, network analysis tools, and `telcosec-pkg` client to pull domain suites on demand from `meta.telcochisel.com`.
 
 ---
 
