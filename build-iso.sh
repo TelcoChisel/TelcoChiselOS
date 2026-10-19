@@ -606,9 +606,14 @@ rm -rf /opt/telcosec/miniconda/pkgs/ 2>/dev/null || true
 _CONDA_ENVS=/opt/telcosec/miniconda/envs
 if [ -d "$_CONDA_ENVS" ]; then
   find "$_CONDA_ENVS" -type f -name '*.a' -delete 2>/dev/null || true
-  # NOTE: include/ is intentionally NOT removed — GNU Radio OOT module builds
-  # and SWIG/pybind flows in the live session may need the headers. Static
-  # libs, tests, docs and debug symbols below are safe runtime-dead weight.
+  # C/C++ headers: only needed to *build* against the env (GNU Radio OOT modules,
+  # SWIG/pybind). That is an advanced dev task; a user who needs it can
+  # `conda install` the -dev packages back. Removing include/ reclaims ~200 MB
+  # and is what brings the full ISO under the 5 GB SourceForge budget.
+  find "$_CONDA_ENVS" -type d -name include -prune -exec rm -rf {} + 2>/dev/null || true
+  # Byte-compiled Python caches inside the env (regenerated on demand).
+  find "$_CONDA_ENVS" -type d -name '__pycache__' -prune -exec rm -rf {} + 2>/dev/null || true
+  find "$_CONDA_ENVS" -type f \( -name '*.pyc' -o -name '*.pyo' \) -delete 2>/dev/null || true
   # Python test suites inside the env's site-packages (numpy/scipy/etc.).
   find "$_CONDA_ENVS" -type d \( -name tests -o -name test \) \
     -path '*/site-packages/*' -prune -exec rm -rf {} + 2>/dev/null || true
