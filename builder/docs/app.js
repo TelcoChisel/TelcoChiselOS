@@ -680,7 +680,7 @@ const toolsCatalog = [
     {
             "name": "voiphopper",
             "category": "voip",
-            "status": "ready",
+            "status": "setup",
             "desc": "Security assessment tool that mimics IP phone behavior by spoofing Cisco CDP and LLDP-MED packets to hop into VoIP voice VLANs.",
             "path": "/usr/local/bin/voiphopper",
             "cmd": "voiphopper --help"
