@@ -14,9 +14,12 @@ on:
         type: choice
         options:
           - nightly   # build + push to SF rolling/, update rolling pre-release
-          - patch     # bump x.y.Z → x.y.Z+1, create versioned release
-          - minor     # bump x.Y.z → x.Y+1.0, create versioned release
-          - major     # bump X.y.z → X+1.0.0, create versioned release
+          - point     # YYYY.Q.P -> YYYY.Q.(P+1)  (bug/security point release)
+          - quarter   # YYYY.Q.P -> YYYY.(Q+1).0, and YYYY.4.x -> (YYYY+1).1.0
+          # Back-compat aliases for the old semver labels:
+          - patch     # alias of 'point'
+          - minor     # alias of 'quarter'
+          - major     # alias of 'quarter'
       build_flavor:
         description: 'Distro flavor to build'
         required: false
@@ -126,13 +129,23 @@ jobs:
             else
               CURRENT="0.0.0"
             fi
-            IFS='.' read -r VER_MAJOR VER_MINOR VER_PATCH <<< "$CURRENT"
+            # Date-based YYYY.Q.P (Q = quarter 1-4, P = point release).
+            # YEAR and QUARTER come from the current version; PT from its 3rd
+            # field (0 if absent, e.g. an old "2026.2" tag).
+            IFS='.' read -r YEAR QUARTER PT <<< "$CURRENT"
+            PT="${PT:-0}"
             case "$RELEASE_TYPE" in
-              patch) VER_PATCH=$(( VER_PATCH + 1 )) ;;
-              minor) VER_MINOR=$(( VER_MINOR + 1 )); VER_PATCH=0 ;;
-              major) VER_MAJOR=$(( VER_MAJOR + 1 )); VER_MINOR=0; VER_PATCH=0 ;;
+              point|patch)
+                PT=$(( PT + 1 )) ;;
+              quarter|minor|major)
+                if [ "$QUARTER" -ge 4 ]; then
+                  YEAR=$(( YEAR + 1 )); QUARTER=1
+                else
+                  QUARTER=$(( QUARTER + 1 ))
+                fi
+                PT=0 ;;
             esac
-            BUMPED="${VER_MAJOR}.${VER_MINOR}.${VER_PATCH}"
+            BUMPED="${YEAR}.${QUARTER}.${PT}"
             printf '%s\n' "$BUMPED" > VERSION
             git config user.email "github-actions[bot]@users.noreply.github.com"
             git config user.name  "github-actions[bot]"
