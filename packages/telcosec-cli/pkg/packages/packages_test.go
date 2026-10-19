@@ -149,7 +149,7 @@ func TestAuditPackages(t *testing.T) {
 }
 
 func TestOfficialRepoKeyFingerprintPinned(t *testing.T) {
-	if OfficialRepoKeyFingerprint != "6326A34C15FEF05FBD63518B4325182E2F0D9DB9" {
+	if OfficialRepoKeyFingerprint != "3DDEADD34827571266C41601C3BB61613B110128" {
 		t.Fatalf("unexpected OfficialRepoKeyFingerprint: %s", OfficialRepoKeyFingerprint)
 	}
 	if OfficialRepoURL != "https://meta.telcochisel.com" {
@@ -158,7 +158,7 @@ func TestOfficialRepoKeyFingerprintPinned(t *testing.T) {
 }
 
 func TestParseGPGColonFingerprint(t *testing.T) {
-	sample := "pub:u:4096:1:ABCDEF:...\nfpr:::::::::6326A34C15FEF05FBD63518B4325182E2F0D9DB9:\nuid:..."
+	sample := "pub:u:4096:1:ABCDEF:...\nfpr:::::::::3DDEADD34827571266C41601C3BB61613B110128:\nuid:..."
 	got := parseGPGColonFingerprint(sample)
 	if got != OfficialRepoKeyFingerprint {
 		t.Fatalf("parseGPGColonFingerprint = %q, want %q", got, OfficialRepoKeyFingerprint)
