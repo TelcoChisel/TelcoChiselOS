@@ -791,6 +791,15 @@ _MEM_MB=$(( (_AVAIL_KB / 1024) * 60 / 100 / _SQUASHFS_PROCS ))
 [ "$_MEM_MB" -lt 512 ]  && _MEM_MB=512
 [ "$_MEM_MB" -gt 4096 ] && _MEM_MB=4096
 
+# ── Pre-pack size report ────────────────────────────────────────────────────
+# Print the largest consumers of the rootfs so ISO-size decisions are
+# data-driven, not guesswork. Cheap (seconds) and only informational.
+echo "--> Rootfs size breakdown (top consumers before squashfs):"
+du -sh "$ROOTFS" 2>/dev/null | awk '{print "    TOTAL rootfs: "$1}'
+du -shx "$ROOTFS"/opt/telcosec/* "$ROOTFS"/opt/telcosec/miniconda/envs/* \
+        "$ROOTFS"/usr/lib "$ROOTFS"/usr/share "$ROOTFS"/usr/local \
+        "$ROOTFS"/opt 2>/dev/null | sort -rh | head -25 | sed 's/^/    /' || true
+
 echo "--> Packing filesystem into squashfs (zstd-${SQUASHFS_LEVEL}, procs=${_SQUASHFS_PROCS}, mem-per-proc=${_MEM_MB}M)..."
 nice -n 10 mksquashfs "$ROOTFS" "$WORKDIR/image/casper/filesystem.squashfs" \
   -comp zstd -Xcompression-level "${SQUASHFS_LEVEL}" \
