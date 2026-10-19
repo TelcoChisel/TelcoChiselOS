@@ -626,35 +626,40 @@ if [ -d "${TELCOSEC_OPT}/docsis" ]; then
 fi
 record_tool "docsis" "/usr/local/bin/docsis" "adsl"
 
-# 5. VoIP Hopper (Voice VLAN hopping security assessment tool)
-if [ ! -d "${TELCOSEC_OPT}/voiphopper" ]; then
-  git clone --depth 1 https://github.com/hmgh0st/voiphopper.git "${TELCOSEC_OPT}/voiphopper" 2>/dev/null || \
-  git clone --depth 1 https://gitlab.com/kalilinux/packages/voiphopper.git "${TELCOSEC_OPT}/voiphopper" 2>/dev/null || \
-  git clone --depth 1 https://github.com/ik-5/voiphopper "${TELCOSEC_OPT}/voiphopper" 2>/dev/null || true
+# 5. VoIP Hopper (deferred: setup tool)
+# The Debian-packaged autotools build is fragile on Ubuntu 24.04 (glibc-2.39
+# dropped rpc/types.h -> needs libtirpc; maintainer-mode re-bootstraps via a
+# hardcoded missing-script path) and did not reliably produce a binary at build
+# time. Build on first run via `sudo voiphopper-install`; libtirpc-dev is in
+# PKGS_ADVANCED so the headers are already present.
+echo "  Creating VoIP Hopper first-run installer..."
+cat > /usr/local/bin/voiphopper-install << 'SCRIPT'
+#!/bin/bash
+set -e
+OPT=/opt/telcosec
+if [ ! -d "$OPT/voiphopper" ] || [ ! -f "$OPT/voiphopper/configure" ]; then
+  git clone --depth 1 https://github.com/hmgh0st/voiphopper.git "$OPT/voiphopper" \
+    || git clone --depth 1 https://gitlab.com/kalilinux/packages/voiphopper.git "$OPT/voiphopper" \
+    || git clone --depth 1 https://github.com/ik-5/voiphopper "$OPT/voiphopper"
 fi
-if [ -d "${TELCOSEC_OPT}/voiphopper" ]; then
-  cd "${TELCOSEC_OPT}/voiphopper"
-  # voiphopper ships Debian-packaged autotools with two Ubuntu-24.04 pitfalls:
-  #  1. maintainer-mode re-bootstraps via a hardcoded /usr/src/.../missing path
-  #     that does not exist here -> `make` dies with Error 127. Disable it.
-  #  2. it #includes <rpc/types.h>, which glibc 2.39 removed; the headers now
-  #     live in libtirpc (-I/usr/include/tirpc, -ltirpc). See PKGS_ADVANCED.
-  chmod +x ./configure 2>/dev/null || true
-  if [ -x ./configure ]; then
-    ./configure --disable-maintainer-mode \
-      CPPFLAGS="-I/usr/include/tirpc -I$(pwd)/src" \
-      CFLAGS="-w" LIBS="-ltirpc -lpcap" >/dev/null 2>&1 || true
-    nice -n 10 make -j"$(get_build_procs)" >/dev/null 2>&1 || true
-  fi
-  VH_BIN=$(find . -maxdepth 2 -type f -name voiphopper -perm -u+x 2>/dev/null | head -1)
-  if [ -n "$VH_BIN" ] && [ -f "$VH_BIN" ]; then
-    ln -sf "${TELCOSEC_OPT}/voiphopper/${VH_BIN#./}" /usr/local/bin/voiphopper
-  else
-    echo "  WARNING: voiphopper build produced no binary"
-  fi
-  cd /
+cd "$OPT/voiphopper"
+chmod +x ./configure 2>/dev/null || true
+# autoreconf first if the shipped build system is stale; ignore failures and
+# fall back to the shipped configure with maintainer-mode off.
+autoreconf -fi 2>/dev/null || true
+./configure --disable-maintainer-mode \
+  CPPFLAGS="-I/usr/include/tirpc -I$(pwd)/src" CFLAGS="-w" LIBS="-ltirpc -lpcap"
+make -j"$(nproc)"
+VH_BIN=$(find . -maxdepth 2 -type f -name voiphopper -perm -u+x 2>/dev/null | head -1)
+if [ -n "$VH_BIN" ]; then
+  sudo ln -sf "$OPT/voiphopper/${VH_BIN#./}" /usr/local/bin/voiphopper
+  echo "VoIP Hopper installed: run 'voiphopper'"
+else
+  echo "ERROR: voiphopper build produced no binary" >&2; exit 1
 fi
-record_tool "voiphopper" "/usr/local/bin/voiphopper" "voip"
+SCRIPT
+chmod +x /usr/local/bin/voiphopper-install
+record_tool "voiphopper" "/usr/local/bin/voiphopper-install" "voip"
 
 # 6. rtpbleed (RTP stream bleeding and leaky media proxy auditor)
 cat << 'EOF' | tee /usr/local/bin/rtpbleed > /dev/null
