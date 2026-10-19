@@ -3,7 +3,7 @@
 # builder/scripts/00-install-all-packages.sh and scripts/install-telcochisel-repo.sh).
 set -euo pipefail
 
-TELCOSEC_URL="${TELCOSEC_URL:-https://meta.telcosec.net}"
+TELCOSEC_URL="${TELCOSEC_URL:-https://meta.telcochisel.com}"
 TELCOSEC_KEY="/etc/apt/keyrings/telcochisel-archive-keyring.asc"
 TELCOSEC_SOURCES="/etc/apt/sources.list.d/telcochisel.sources"
 TELCOSEC_FPR="6326A34C15FEF05FBD63518B4325182E2F0D9DB9"

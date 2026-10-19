@@ -54,7 +54,7 @@ Please include:
 - Flaws in custom TelcoChisel binaries and scripts (`telcosec`, `telcosec-pkg`, `telcosec-create-usb`).
 - Insecure default permissions outside of standard live-mode operation.
 - Vulnerabilities in the Calamares installer integration or LUKS encryption implementation.
-- Infrastructure security of our APT repositories (`meta.telcosec.net`) and portals.
+- Infrastructure security of our APT repositories (`meta.telcochisel.com`) and portals.
 
 ### Out of Scope / Upstream Tools
 - **Bundled Offensive Tools**: TelcoChisel deliberately ships security auditing tools (e.g., 5Ghoul, SigPloit, QCSuper, FirmWire, srsRAN, Open5GS) whose intended purpose is finding and demonstrating vulnerabilities in cellular protocols. Behavior that is part of a tool's normal offensive operation is not considered a TelcoChisel vulnerability.

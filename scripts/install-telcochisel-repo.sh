@@ -20,7 +20,7 @@ if [ "$(id -u)" -ne 0 ]; then
   exit 1
 fi
 
-TELCOSEC_URL="https://meta.telcosec.net"
+TELCOSEC_URL="https://meta.telcochisel.com"
 TELCOSEC_KEY="/etc/apt/keyrings/telcochisel-archive-keyring.asc"
 TELCOSEC_SOURCES="/etc/apt/sources.list.d/telcochisel.sources"
 TELCOSEC_FPR="6326A34C15FEF05FBD63518B4325182E2F0D9DB9"
@@ -70,11 +70,11 @@ echo "--> Configuring TelcoChisel package pinning policy..."
 mkdir -p /etc/apt/preferences.d
 cat > "/etc/apt/preferences.d/99-telcochisel.pref" << 'EOF'
 Package: telcochisel-*
-Pin: origin meta.telcosec.net
+Pin: origin meta.telcochisel.com
 Pin-Priority: 1001
 
 Package: *
-Pin: origin meta.telcosec.net
+Pin: origin meta.telcochisel.com
 Pin-Priority: 990
 EOF
 chmod 0644 "/etc/apt/preferences.d/99-telcochisel.pref"

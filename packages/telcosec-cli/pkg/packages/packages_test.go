@@ -152,7 +152,7 @@ func TestOfficialRepoKeyFingerprintPinned(t *testing.T) {
 	if OfficialRepoKeyFingerprint != "6326A34C15FEF05FBD63518B4325182E2F0D9DB9" {
 		t.Fatalf("unexpected OfficialRepoKeyFingerprint: %s", OfficialRepoKeyFingerprint)
 	}
-	if OfficialRepoURL != "https://meta.telcosec.net" {
+	if OfficialRepoURL != "https://meta.telcochisel.com" {
 		t.Fatalf("unexpected OfficialRepoURL: %s", OfficialRepoURL)
 	}
 }

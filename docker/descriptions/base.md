@@ -8,7 +8,7 @@
 
 Official headless CLI container image for **TelcoChisel OS** (`v2026.2`), the premier telecom security penetration testing and research distribution developed by **TelcoSec** ([telco-sec.com](https://telco-sec.com) • [telcochisel.com](https://telcochisel.com)).
 
-Built on **Ubuntu 24.04 LTS (Noble Numbat)**, stripped of desktop/manpage bloat, and enrolled in the official [TelcoSec Metapackage Archive](https://meta.telcosec.net).
+Built on **Ubuntu 24.04 LTS (Noble Numbat)**, stripped of desktop/manpage bloat, and enrolled in the official [TelcoSec Metapackage Archive](https://meta.telcochisel.com).
 
 ---
 
@@ -68,4 +68,4 @@ TelcoChisel and TelcoSec tools are designed strictly for authorized telecommunic
 - **Official Website:** [telcosec.net](https://telcosec.net)
 - **Documentation & Research:** [telcosec.net/docs](https://telcosec.net)
 - **GitHub Repository:** [TelcoChisel/TelcoChiselOS](https://github.com/TelcoChisel/TelcoChiselOS)
-- **Official Metapackages:** [meta.telcosec.net](https://meta.telcosec.net)
+- **Official Metapackages:** [meta.telcochisel.com](https://meta.telcochisel.com)

@@ -7,12 +7,12 @@
 #   - Install and remove metapackages by name or shorthand alias
 #   - Inspect dependencies, recommends, and tool manifests
 #   - Verify dependency integrity and repair broken states
-#   - Manage official APT repository connection (meta.telcosec.net)
+#   - Manage official APT repository connection (meta.telcochisel.com)
 # =============================================================================
 set -euo pipefail
 
 VERSION="1.2.0"
-TELCOSEC_URL="https://meta.telcosec.net"
+TELCOSEC_URL="https://meta.telcochisel.com"
 TELCOSEC_KEY="/etc/apt/keyrings/telcochisel-archive-keyring.asc"
 TELCOSEC_SOURCES="/etc/apt/sources.list.d/telcochisel.sources"
 TELCOSEC_PREF="/etc/apt/preferences.d/99-telcochisel.pref"
@@ -238,7 +238,7 @@ Commands:
   tools [pkg|alias]          Inspect exact tool manifests included in metapackage tiers
   search <query>             Search metapackages, tool manifests and APT repositories
   check | verify             Audit health of installed metapackages and dependencies
-  repo [status|enable]       Check or configure official APT repo (meta.telcosec.net)
+  repo [status|enable]       Check or configure official APT repo (meta.telcochisel.com)
   version                    Display version and APT repository status
 
 Shorthand Aliases:
@@ -734,18 +734,18 @@ cmd_repo() {
         $SUDO chmod 0644 "$TELCOSEC_KEY"
         cat << 'EOF' | $SUDO tee "$TELCOSEC_SOURCES" >/dev/null
 Types: deb
-URIs: https://meta.telcosec.net
+URIs: https://meta.telcochisel.com
 Suites: noble
 Components: main
 Signed-By: /etc/apt/keyrings/telcochisel-archive-keyring.asc
 EOF
         cat << 'EOF' | $SUDO tee "$TELCOSEC_PREF" >/dev/null
 Package: telcochisel-*
-Pin: origin meta.telcosec.net
+Pin: origin meta.telcochisel.com
 Pin-Priority: 1001
 
 Package: *
-Pin: origin meta.telcosec.net
+Pin: origin meta.telcochisel.com
 Pin-Priority: 990
 EOF
         $SUDO chmod 0644 "$TELCOSEC_PREF"

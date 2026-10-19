@@ -91,7 +91,7 @@ _telcosec() {
                         'install:Deploy a modular metapackage suite to system'
                         'remove:Remove a metapackage suite from system'
                         'check:Verify installed metapackage integrity and dpkg state'
-                        'repo:Inspect or configure meta.telcosec.net repository'
+                        'repo:Inspect or configure meta.telcochisel.com repository'
                     )
                     metapackages=(
                         'base:Core OS kernel latency tuning, PAM limits, SCTP stack'

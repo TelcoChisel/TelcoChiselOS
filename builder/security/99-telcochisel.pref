@@ -2,9 +2,9 @@
 # Give TelcoChisel package repository high priority so custom tools & metapackages take precedence
 
 Package: telcochisel-*
-Pin: origin meta.telcosec.net
+Pin: origin meta.telcochisel.com
 Pin-Priority: 1001
 
 Package: *
-Pin: origin meta.telcosec.net
+Pin: origin meta.telcochisel.com
 Pin-Priority: 990

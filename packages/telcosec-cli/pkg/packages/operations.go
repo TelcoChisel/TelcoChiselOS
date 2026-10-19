@@ -14,7 +14,7 @@ import (
 )
 
 const (
-	OfficialRepoURL = "https://meta.telcosec.net"
+	OfficialRepoURL = "https://meta.telcochisel.com"
 	Deb822Sources   = "/etc/apt/sources.list.d/telcochisel.sources"
 	LegacySources   = "/etc/apt/sources.list.d/telcosec.list"
 	ArchiveKeyring  = "/etc/apt/keyrings/telcochisel-archive-keyring.asc"
@@ -161,7 +161,7 @@ func RepoStatus(w io.Writer) error {
 	return nil
 }
 
-// RepoEnable enrolls the host system in the official meta.telcosec.net repository.
+// RepoEnable enrolls the host system in the official meta.telcochisel.com repository.
 // Prefers telcosec-pkg or a local install-telcochisel-repo.sh; otherwise installs
 // the key with fingerprint verification (never curl|bash from floating main).
 func RepoEnable(w io.Writer) error {
@@ -256,8 +256,8 @@ func enableOfficialRepoNative(w io.Writer) error {
 		return fmt.Errorf("write APT sources: %w", err)
 	}
 
-	prefs := "Package: telcochisel-*\nPin: origin meta.telcosec.net\nPin-Priority: 1001\n\n" +
-		"Package: *\nPin: origin meta.telcosec.net\nPin-Priority: 990\n"
+	prefs := "Package: telcochisel-*\nPin: origin meta.telcochisel.com\nPin-Priority: 1001\n\n" +
+		"Package: *\nPin: origin meta.telcochisel.com\nPin-Priority: 990\n"
 	if err := sudoWriteFile(AptPreferences, prefs, "0644"); err != nil {
 		return fmt.Errorf("write APT preferences: %w", err)
 	}
