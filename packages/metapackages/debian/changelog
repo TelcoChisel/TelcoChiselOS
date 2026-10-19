@@ -1,3 +1,15 @@
+telcochisel-metapackages (2026.3.1-1) noble; urgency=medium
+
+  * Honest tier contents: the 2g-3g/4g/5g/sim/ue tiers previously named tools
+    (srsRAN, Open5GS, UERANSIM, 5Ghoul, pySim, FirmWire, ...) that are not
+    Ubuntu packages, so `apt install` did not deliver them. Descriptions now
+    state what APT installs (SDR/hardware access, build tooling, telcosec-cli,
+    APT-available tools) vs. what builds on first run via the *-install helpers.
+  * Those tiers now Depend on telcosec-cli + build-essential/cmake/git so the
+    first-run installers actually work on a plain Ubuntu enrollment.
+
+ -- TelcoChisel Engineering Team <ops@telcochisel.com>  Sun, 19 Oct 2026 12:00:00 +0000
+
 telcochisel-metapackages (2026.3.0-1) noble; urgency=medium
 
   * Version synced to TelcoChisel OS 2026.3.0 release.

@@ -23,6 +23,16 @@ These metapackages enable users and automated CI/CD environments to install spec
 | **`telcochisel-tools-ue`** | `ue` / `modem` | Mobile UE & Baseband | UERANSIM UE, SCAT, QCSuper, FirmWire baseband fuzzer, MTKClient, EDL 9008 |
 | **`telcochisel-meta-full`** | `full` / `complete` | Complete Ecosystem Umbrella | Installs all 100 specialized telecom security instruments across all 10 domains |
 
+> **What a metapackage actually installs.** The tools listed above describe each
+> tier's *domain*. Many flagship tools (srsRAN, Open5GS, UERANSIM, 5Ghoul,
+> LTESniffer, FirmWire, pySim, SIMtrace, lpac, …) are **not** Ubuntu packages —
+> they are compiled or installed on first run via their setup helpers
+> (`sudo srsran-install`, `sudo open5gs-install`, `sudo 5ghoul-install`, …).
+> Installing a tier via APT therefore pulls the domain's **APT-available tools,
+> SDR/hardware access, build tooling and `telcosec-cli`**, then you run the
+> relevant `*-install` helper(s) to build the rest. On the live ISO the
+> ready/setup split is shown per tool in the catalog.
+
 ---
 
 ## Building the Metapackages
